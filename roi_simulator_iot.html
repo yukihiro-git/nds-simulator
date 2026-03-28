@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ほのぼのIoTクラウド　センサー導入診断</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=Zen+Kaku+Gothic+New:wght@700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f0f4f8;
+  --surface:#ffffff;
+  --surface2:#e4ecf4;
+  --border:#c8d8e8;
+  --accent:#1a4878;
+  --accent2:#2870c0;
+  --accent-light:#e8f0fb;
+  --teal:#0f6e56;
+  --teal-light:#e4f5f0;
+  --amber:#c8760a;
+  --amber-light:#fdf3e0;
+  --purple:#5436c8;
+  --purple-light:#f0ecfc;
+  --green:#2a7a50;
+  --red:#c84b2f;
+  --text:#0e1820;
+  --text2:#3a4e60;
+  --text3:#7a90a8;
+  --mono:'DM Mono',monospace;
+  --sans:'Noto Sans JP',sans-serif;
+  --display:'Zen Kaku Gothic New',sans-serif;
+  --r:10px;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh}
+body::before{content:'';position:fixed;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--accent),var(--accent2),var(--teal))}
+
+.wrapper{max-width:920px;margin:0 auto;padding:48px 24px 80px}
+
+/* header */
+.header{margin-bottom:32px;animation:fadeUp .45s ease both}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-family:var(--mono);letter-spacing:.12em;color:var(--accent);text-transform:uppercase;margin-bottom:12px}
+.eyebrow::before{content:'';width:20px;height:1px;background:var(--accent)}
+h1{font-family:var(--display);font-size:clamp(22px,3.6vw,32px);font-weight:900;letter-spacing:-.02em;line-height:1.2;margin-bottom:8px}
+h1 em{font-style:normal;color:var(--accent2)}
+.header-desc{font-size:13px;color:var(--text2);line-height:1.8;font-weight:300;max-width:580px}
+
+/* system tabs */
+.sys-tabs{display:grid;grid-template-columns:1fr 1fr;border:1.5px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:28px;animation:fadeUp .45s .05s ease both}
+.sys-btn{padding:14px 20px;cursor:pointer;border:none;background:var(--surface);text-align:left;transition:all .2s;display:flex;flex-direction:column;gap:3px}
+.sys-btn:first-child{border-right:1px solid var(--border)}
+.sys-btn.active-next{background:var(--accent-light);border-bottom:3px solid var(--accent)}
+.sys-btn.active-more{background:var(--teal-light);border-bottom:3px solid var(--teal)}
+.sys-name{font-size:14px;font-weight:700;font-family:var(--display);color:var(--text);letter-spacing:-.01em}
+.sys-sub{font-size:10px;color:var(--text3);font-family:var(--mono);letter-spacing:.04em}
+
+.back-link{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--text3);font-family:var(--mono);cursor:pointer;transition:color .2s;margin-bottom:28px;display:block}
+.back-link:hover{color:var(--accent)}
+
+/* step nav */
+.step-nav{display:flex;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:24px;animation:fadeUp .45s .08s ease both}
+.step-item{flex:1;padding:10px 8px;text-align:center;font-size:11px;font-family:var(--mono);color:var(--text3);background:var(--surface);border-right:1px solid var(--border);letter-spacing:.06em;transition:all .3s}
+.step-item:last-child{border-right:none}
+.step-item.active{background:var(--accent);color:#fff}
+.step-item.done{background:var(--surface2);color:var(--text2)}
+
+/* panels */
+.panel{display:none;animation:fadeUp .35s ease both}
+.panel.show{display:block}
+
+/* card */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:24px;margin-bottom:16px}
+.card-label{font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--text3);text-transform:uppercase;margin-bottom:16px}
+.card-title{font-size:16px;font-weight:700;color:var(--text);margin-bottom:6px}
+.card-desc{font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:16px;font-weight:300}
+
+/* issue grid */
+.issue-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:540px){.issue-grid{grid-template-columns:1fr}}
+.issue-item{
+  border:1.5px solid var(--border);border-radius:8px;
+  padding:12px 14px;cursor:pointer;transition:all .2s;user-select:none;
+  display:flex;align-items:flex-start;gap:10px;
+}
+.issue-item:hover{border-color:var(--accent2)}
+.issue-item.checked{border-color:var(--accent);background:var(--accent-light)}
+.issue-item.checked-more{border-color:var(--teal);background:var(--teal-light)}
+.issue-cb{width:18px;height:18px;flex-shrink:0;border:1.5px solid var(--border);border-radius:4px;display:flex;align-items:center;justify-content:center;transition:all .2s;margin-top:1px}
+.issue-item.checked .issue-cb{background:var(--accent);border-color:var(--accent)}
+.issue-item.checked-more .issue-cb{background:var(--teal);border-color:var(--teal)}
+.issue-text{font-size:12px;color:var(--text);line-height:1.5}
+.issue-tag{display:inline-block;margin-top:5px;font-size:9px;font-family:var(--mono);letter-spacing:.06em;padding:2px 7px;border-radius:3px}
+
+/* nav buttons */
+.btn-row{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+.btn{border:none;border-radius:8px;padding:11px 24px;font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;transition:all .2s}
+.btn-back{background:var(--surface2);color:var(--text2);border:1px solid var(--border)}
+.btn-next{background:var(--accent);color:#fff}
+.btn-next-teal{background:var(--teal);color:#fff}
+.btn-back:hover{background:var(--border)}
+.btn-next:hover,.btn-next-teal:hover{opacity:.88}
+
+/* sensor recommendation cards */
+.sensor-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+@media(max-width:560px){.sensor-grid{grid-template-columns:1fr}}
+.sensor-card{
+  border:1.5px solid var(--border);border-radius:10px;overflow:hidden;
+  transition:all .2s;cursor:pointer;
+}
+.sensor-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.08)}
+.sensor-card.selected{border-width:2px}
+.sensor-card.s-mimamori.selected{border-color:var(--accent)}
+.sensor-card.s-vital.selected{border-color:var(--teal)}
+.sensor-card.s-haisetsu.selected{border-color:var(--amber)}
+.sensor-card.s-nurse.selected{border-color:var(--purple)}
+.sensor-card.s-mimamori .sc-header{background:var(--accent-light);border-bottom:1px solid var(--border)}
+.sensor-card.s-vital    .sc-header{background:var(--teal-light);border-bottom:1px solid var(--border)}
+.sensor-card.s-haisetsu .sc-header{background:var(--amber-light);border-bottom:1px solid var(--border)}
+.sensor-card.s-nurse    .sc-header{background:var(--purple-light);border-bottom:1px solid var(--border)}
+.sc-header{padding:12px 16px}
+.sc-tag{font-size:10px;font-family:var(--mono);letter-spacing:.06em;padding:2px 8px;border-radius:3px;display:inline-block;margin-bottom:6px}
+.s-mimamori .sc-tag{background:var(--accent);color:#fff}
+.s-vital    .sc-tag{background:var(--teal);color:#fff}
+.s-haisetsu .sc-tag{background:var(--amber);color:#fff}
+.s-nurse    .sc-tag{background:var(--purple);color:#fff}
+.sc-name{font-size:13px;font-weight:700;color:var(--text);line-height:1.3}
+.sc-body{padding:12px 16px}
+.sc-desc{font-size:11px;color:var(--text2);line-height:1.65;margin-bottom:8px}
+.sc-effects{display:flex;flex-wrap:wrap;gap:4px}
+.sc-effect{font-size:10px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;padding:2px 7px;color:var(--text2)}
+.sc-check{display:flex;align-items:center;gap:6px;margin-top:10px;font-size:11px;font-weight:500}
+.sc-check-dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;transition:all .2s;display:flex;align-items:center;justify-content:center}
+.sensor-card.selected .sc-check-dot{background:var(--accent);border-color:var(--accent)}
+.s-vital.selected    .sc-check-dot{background:var(--teal);border-color:var(--teal)}
+.s-haisetsu.selected .sc-check-dot{background:var(--amber);border-color:var(--amber)}
+.s-nurse.selected    .sc-check-dot{background:var(--purple);border-color:var(--purple)}
+
+.recommend-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(200,118,10,.12);border:1px solid rgba(200,118,10,.3);
+  border-radius:6px;padding:8px 14px;margin-bottom:16px;
+  font-size:12px;color:#7a4a00;line-height:1.5;
+}
+
+/* slider */
+.slider-field{margin-bottom:20px}
+.slider-field:last-child{margin-bottom:0}
+.slider-label{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;gap:8px}
+.slider-label-text{font-size:13px;color:var(--text2);line-height:1.4}
+.slider-val{font-family:var(--mono);font-size:14px;font-weight:500;color:var(--text);flex-shrink:0}
+.slider-wrap{position:relative;height:20px;display:flex;align-items:center}
+input[type=range]{-webkit-appearance:none;width:100%;height:4px;background:var(--border);border-radius:2px;outline:none;cursor:pointer;position:relative;z-index:1}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;background:var(--surface);border:2px solid var(--accent);border-radius:50%;cursor:pointer;transition:transform .15s}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2)}
+.slider-fill{position:absolute;left:0;top:50%;height:4px;background:var(--accent);border-radius:2px;pointer-events:none;transform:translateY(-50%);z-index:0}
+
+/* result panel */
+.result-layout{display:grid;grid-template-columns:1fr 300px;gap:16px;align-items:start}
+@media(max-width:660px){.result-layout{grid-template-columns:1fr}}
+
+.result-sticky{position:sticky;top:24px}
+.r-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.r-header{background:var(--accent);color:#fff;padding:16px 20px}
+.r-title{font-size:13px;font-weight:500;margin-bottom:2px}
+.r-sub{font-size:11px;opacity:.7;font-family:var(--mono)}
+
+.r-metric{padding:14px 20px;border-bottom:1px solid var(--border)}
+.r-lbl{font-size:10px;font-family:var(--mono);color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px}
+.r-num{font-family:var(--mono);font-size:clamp(18px,2.5vw,24px);font-weight:500;color:var(--accent);transition:all .3s}
+.r-num.g{color:var(--green)}
+.r-unit{font-size:11px;color:var(--text3)}
+
+.sensor-results{margin-bottom:0}
+.sr-item{padding:12px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px}
+.sr-name{font-size:12px;color:var(--text2);flex:1}
+.sr-val{font-family:var(--mono);font-size:12px;font-weight:500;color:var(--green)}
+
+.r-comment{margin:14px 20px;padding:11px 13px;background:rgba(26,72,120,.07);border-left:3px solid var(--accent);border-radius:0 6px 6px 0;font-size:12px;color:var(--text2);line-height:1.75}
+.r-comment strong{color:var(--accent);font-weight:500}
+
+.r-cta{padding:16px 20px;border-top:1px solid var(--border);background:var(--surface2)}
+.r-cta p{font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:10px}
+.r-cta p strong{color:var(--text);font-weight:500}
+.inp{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:7px;font-family:var(--sans);font-size:13px;color:var(--text);padding:9px 12px;margin-bottom:8px;transition:border-color .2s}
+.inp:focus{outline:none;border-color:var(--accent)}
+.inp::placeholder{color:var(--text3)}
+.btn-cta{width:100%;background:var(--accent);color:#fff;border:none;border-radius:7px;font-family:var(--sans);font-size:13px;font-weight:700;padding:11px;cursor:pointer;transition:opacity .2s}
+.btn-cta:hover{opacity:.85}
+.success{display:none;align-items:center;gap:6px;background:rgba(42,122,80,.1);border:1px solid rgba(42,122,80,.3);border-radius:7px;padding:10px 12px;font-size:12px;color:var(--green)}
+.success.show{display:flex}
+.cta-note{font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:8px}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="eyebrow">ほのぼのIoTクラウド　センサー連携</div>
+    <h1>どのセンサーを入れれば、<br><em>現場が変わる</em>のか。</h1>
+    <p class="header-desc">現場の課題をチェックするだけで、導入すべきセンサー種別と生産性向上効果を診断します。ほのぼのNEXT・moreとリアルタイム連携し、センサー情報を自動で記録に取り込みます。</p>
+  </div>
+
+  <!-- SYSTEM TABS -->
+  <div class="sys-tabs">
+    <button class="sys-btn active-next" id="tab-next" onclick="switchSys('next')">
+      <div class="sys-name">ほのぼのNEXT</div>
+      <div class="sys-sub">介護保険対応　施設・訪問・通所系</div>
+    </button>
+    <button class="sys-btn" id="tab-more" onclick="switchSys('more')">
+      <div class="sys-name">ほのぼのmore</div>
+      <div class="sys-sub">障害者総合支援法対応　障害福祉系</div>
+    </button>
+  </div>
+
+  <span class="back-link" onclick="history.back()">← トップに戻る</span>
+
+  <!-- STEP NAV -->
+  <div class="step-nav">
+    <div class="step-item active" id="nav1">01　現場の課題</div>
+    <div class="step-item" id="nav2">02　推奨センサー</div>
+    <div class="step-item" id="nav3">03　効果試算</div>
+  </div>
+
+  <!-- ===== STEP 1: 課題チェック ===== -->
+  <div class="panel show" id="panel1">
+    <div class="card">
+      <div class="card-label">STEP 01</div>
+      <div class="card-title" id="step1-title">現場で困っていることをすべて選んでください</div>
+      <div class="card-desc" id="step1-desc">複数選択できます。選んだ課題に対して最適なセンサーを提案します。</div>
+      <div class="issue-grid" id="issue-grid">
+        <!-- JSで動的生成 -->
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-next" id="btn-next1" onclick="goStep(2)">推奨センサーを見る　→</button>
+    </div>
+  </div>
+
+  <!-- ===== STEP 2: センサー推奨 ===== -->
+  <div class="panel" id="panel2">
+    <div class="card">
+      <div class="card-label">STEP 02</div>
+      <div class="card-title">診断結果：推奨センサー</div>
+      <div class="card-desc">選択した課題をもとに、導入効果の高いセンサー種別を優先度順に表示します。<br>導入したいセンサーを選択して効果試算に進んでください（複数選択可）。</div>
+      <div id="recommend-area"></div>
+      <div class="sensor-grid" id="sensor-grid"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-back" onclick="goStep(1)">← 課題を修正する</button>
+      <button class="btn btn-next" id="btn-next2" onclick="goStep(3)">効果を試算する　→</button>
+    </div>
+  </div>
+
+  <!-- ===== STEP 3: 効果試算 ===== -->
+  <div class="panel" id="panel3">
+    <div class="result-layout">
+      <div>
+        <div class="card">
+          <div class="card-label">STEP 03　施設の規模</div>
+          <div class="slider-field">
+            <div class="slider-label">
+              <span class="slider-label-text">入居・利用者数</span>
+              <span class="slider-val" id="v-users">50名</span>
+            </div>
+            <div class="slider-wrap">
+              <div class="slider-fill" id="f-users"></div>
+              <input type="range" id="s-users" min="10" max="200" value="50" step="5" oninput="sv('users',this.value,v=>v+'名');calcResult()">
+            </div>
+          </div>
+          <div class="slider-field">
+            <div class="slider-label">
+              <span class="slider-label-text">夜間対応スタッフ数（夜勤・宿直）</span>
+              <span class="slider-val" id="v-night">3名</span>
+            </div>
+            <div class="slider-wrap">
+              <div class="slider-fill" id="f-night"></div>
+              <input type="range" id="s-night" min="1" max="20" value="3" step="1" oninput="sv('night',this.value,v=>v+'名');calcResult()">
+            </div>
+          </div>
+          <div class="slider-field">
+            <div class="slider-label">
+              <span class="slider-label-text">日中スタッフ数</span>
+              <span class="slider-val" id="v-day">15名</span>
+            </div>
+            <div class="slider-wrap">
+              <div class="slider-fill" id="f-day"></div>
+              <input type="range" id="s-day" min="3" max="100" value="15" step="1" oninput="sv('day',this.value,v=>v+'名');calcResult()">
+            </div>
+          </div>
+          <div class="slider-field" style="margin-bottom:0">
+            <div class="slider-label">
+              <span class="slider-label-text">スタッフの平均時給</span>
+              <span class="slider-val" id="v-wage">1,500円</span>
+            </div>
+            <div class="slider-wrap">
+              <div class="slider-fill" id="f-wage"></div>
+              <input type="range" id="s-wage" min="1000" max="3000" value="1500" step="100" oninput="sv('wage',this.value,v=>Number(v).toLocaleString()+'円');calcResult()">
+            </div>
+          </div>
+        </div>
+
+        <!-- 選択センサーの効果内訳 -->
+        <div class="card" id="sensor-detail-card">
+          <div class="card-label">選択センサーの効果内訳</div>
+          <div id="sensor-detail-list"></div>
+        </div>
+      </div>
+
+      <!-- sticky right panel -->
+      <div class="result-sticky">
+        <div class="r-panel">
+          <div class="r-header">
+            <div class="r-title" id="r-title">IoTクラウド導入効果試算</div>
+            <div class="r-sub" id="r-sub">ほのぼのNEXT</div>
+          </div>
+          <div class="r-metric">
+            <div class="r-lbl">月間削減時間（全体）</div>
+            <div class="r-num" id="r-total-save">--</div>
+            <div class="r-unit">時間 / 月</div>
+          </div>
+          <div class="r-metric">
+            <div class="r-lbl">年間削減コスト換算</div>
+            <div class="r-num g" id="r-year-cost">--</div>
+            <div class="r-unit">万円 / 年</div>
+          </div>
+          <div class="r-metric" style="border-bottom:none">
+            <div class="r-lbl">夜間巡視の削減（月間）</div>
+            <div class="r-num" id="r-night-save">--</div>
+            <div class="r-unit">回 / 月（不要巡視）</div>
+          </div>
+          <div class="sensor-results" id="sensor-summary"></div>
+          <div class="r-comment" id="r-comment">センサーを選択して規模を入力してください。</div>
+          <div class="r-cta">
+            <p>この試算と<strong>センサー連携詳細資料</strong>を無料でお送りします</p>
+            <input class="inp" type="email" id="inp-email" placeholder="メールアドレス">
+            <input class="inp" type="text"  id="inp-org"   placeholder="法人名・施設名（任意）">
+            <button class="btn-cta" onclick="sendLead()">資料を受け取る</button>
+            <div class="success" id="success">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="#2a7a50" stroke-width="1.5"/><path d="M5 8l2 2 4-4" stroke="#2a7a50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              送信完了。担当者よりご連絡します。
+            </div>
+            <p class="cta-note">※ 個人情報はND Softwareが適切に管理します</p>
+          </div>
+        </div>
+        <div class="btn-row" style="margin-top:12px">
+          <button class="btn btn-back" onclick="goStep(2)">← センサー選択に戻る</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script>
+// ============================================================
+// データ定義
+// ============================================================
+let sys = 'next';
+let checkedIssues = new Set();
+let selectedSensors = new Set();
+
+// 課題マスター
+const ISSUES = {
+  next: [
+    { id:'night_round', text:'夜間の定期巡視回数が多く、スタッフの負担が大きい', tags:['mimamori','vital'] },
+    { id:'riskfall',    text:'転倒・転落リスクが高い利用者がいて、夜間が特に不安', tags:['mimamori'] },
+    { id:'vital_input', text:'バイタル測定後の数値入力・転記に時間がかかっている', tags:['vital'] },
+    { id:'haisetsu',    text:'排泄介助のタイミングが分からず、おむつ交換が多い', tags:['haisetsu'] },
+    { id:'nurse_call',  text:'ナースコールへの対応が遅れることがある', tags:['nurse'] },
+    { id:'record_miss', text:'「いつ・何が起きたか」の記録漏れや転記ミスが発生している', tags:['mimamori','vital','haisetsu'] },
+    { id:'alert',       text:'緊急対応の記録・報告に追われ、通常業務が圧迫される', tags:['mimamori','nurse'] },
+    { id:'bcp',         text:'夜間の人員不足でBCP（事業継続）対策に不安がある', tags:['mimamori','nurse'] },
+  ],
+  more: [
+    { id:'night_round', text:'夜間の定期確認回数が多く、スタッフの睡眠が確保できない', tags:['mimamori','vital'] },
+    { id:'riskfall',    text:'てんかんや自傷など、突発的な状態変化への対応が困難', tags:['mimamori'] },
+    { id:'vital_input', text:'バイタル測定値の入力・転記に時間がかかっている', tags:['vital'] },
+    { id:'haisetsu',    text:'排泄パターンの把握が難しく、排泄支援に時間がかかる', tags:['haisetsu'] },
+    { id:'nurse_call',  text:'緊急呼び出しへの対応が遅れることがある', tags:['nurse'] },
+    { id:'record_miss', text:'センサーや状態変化の記録漏れが発生している', tags:['mimamori','vital','haisetsu'] },
+    { id:'activity',    text:'利用者の生活リズムや活動量を客観的に把握したい', tags:['mimamori','vital'] },
+    { id:'evidence',    text:'適切な支援提供の証明（アラート対応履歴）を求められている', tags:['mimamori','nurse'] },
+  ],
+};
+
+// センサーマスター
+const SENSORS = {
+  mimamori: {
+    id:'mimamori', type:'s-mimamori', name:'見守りセンサー（離床・体動）',
+    desc:'ベッドセンサーや非接触型センサーで離床・起き上がり・転倒を自動検知。夜間巡視の代替として機能します。',
+    effects:['夜間巡視削減','転倒早期検知','記録自動化','夜間人員効率化'],
+    issueMatch:['night_round','riskfall','record_miss','alert','bcp','activity','evidence'],
+    // 削減効果パラメータ
+    nightRoundReduce: 0.65,    // 夜間巡視回数削減率
+    recTimeMin: 5,             // 1アラートあたりの記録時間削減（分）
+    connectMakers:['パラマウントベッド（眠りスキャン）','フランスベッド（M-2/M-Sleep Bio）','リコー見守りベッドセンサー','エコナビスタ（ライフリズムナビ）','積水化学（ANSIEL）','コニカミノルタ（HitomeQ）','シャープ 非接触センサー 他'],
+  },
+  vital: {
+    id:'vital', type:'s-vital', name:'バイタル自動測定・連携機器',
+    desc:'血圧計・体温計・パルスオキシメーターなどのバイタル機器とほのぼの記録システムを連携。数値を自動で記録に取り込みます。',
+    effects:['転記時間ゼロ','入力ミス防止','バイタルグラフ自動生成','異常値アラート'],
+    issueMatch:['vital_input','record_miss','night_round','activity'],
+    recTimeMin: 8,             // 1回のバイタル測定の転記削減時間（分）
+    dailyMeasurePerUser: 2,    // 1利用者あたり1日の測定回数
+    connectMakers:['バイタルDX（バイタルサイン測定器）','Care Palette + バイタル機器連携'],
+  },
+  haisetsu: {
+    id:'haisetsu', type:'s-haisetsu', name:'排泄センサー・予測機器',
+    desc:'膀胱に尿が溜まったタイミングを検知して排泄を予測。不必要なおむつ交換を減らし、利用者の自立・尊厳を支援します。',
+    effects:['おむつ交換回数削減','適切なタイミング排泄','尊厳ある介護','記録自動化'],
+    issueMatch:['haisetsu','record_miss'],
+    reduceExchangePct: 0.40,   // おむつ交換削減率
+    minPerExchange: 15,        // 1回の交換・対応時間（分）
+    exchangePerUser: 5,        // 月間のおむつ交換回数（1人あたり）
+    connectMakers:['DFree（排泄予測支援機器）','パラマウントベッド（トイレDIARY）','Helppad２（排泄センサー）'],
+  },
+  nurse: {
+    id:'nurse', type:'s-nurse', name:'ナースコール・緊急呼び出し連携',
+    desc:'ナースコール情報をほのぼのシステムに自動連携。呼び出し日時・対応記録の入力が不要になり、対応履歴が証拠として残ります。',
+    effects:['対応記録自動化','見落とし防止','証拠保全','BCP対応'],
+    issueMatch:['nurse_call','alert','bcp','evidence'],
+    recTimeMin: 6,             // 1コールあたりの記録削減時間（分）
+    callsPerDayPer10: 3,       // 10利用者あたり1日の呼び出し回数
+    connectMakers:['ケアコム（CICSSシリーズ）','アイホン（Vi-nurse）','名電通（ナースエコール）','株式会社ナカヨ 緊急コール 他'],
+  },
+};
+
+// ============================================================
+// UI 制御
+// ============================================================
+function g(id){ return document.getElementById(id); }
+
+function switchSys(s){
+  sys = s;
+  g('tab-next').className = 'sys-btn' + (s==='next' ? ' active-next' : '');
+  g('tab-more').className = 'sys-btn' + (s==='more' ? ' active-more' : '');
+  g('btn-next1').className = 'btn ' + (s==='next' ? 'btn-next' : 'btn-next-teal');
+  g('btn-next2').className = 'btn ' + (s==='next' ? 'btn-next' : 'btn-next-teal');
+  g('r-sub').textContent = s==='next' ? 'ほのぼのNEXT' : 'ほのぼのmore';
+  checkedIssues = new Set();
+  selectedSensors = new Set();
+  buildIssues();
+  goStep(1);
+}
+
+function sv(id, val, fmt){
+  g('v-'+id).textContent = fmt(val);
+  const el = g('s-'+id);
+  const pct = (el.value - el.min)/(el.max - el.min)*100;
+  const f = g('f-'+id); if(f) f.style.width = pct+'%';
+}
+
+function goStep(n){
+  if(n===2) buildSensors();
+  if(n===3){ buildSensorDetail(); calcResult(); }
+  [1,2,3].forEach(i=>{
+    g('panel'+i).classList.toggle('show', i===n);
+    const nav = g('nav'+i);
+    nav.classList.remove('active','done');
+    if(i===n) nav.classList.add('active');
+    else if(i<n) nav.classList.add('done');
+  });
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ============================================================
+// STEP1: 課題チェックリスト構築
+// ============================================================
+function buildIssues(){
+  const grid = g('issue-grid');
+  const issues = ISSUES[sys];
+  const cls = sys==='next' ? 'checked' : 'checked-more';
+  grid.innerHTML = issues.map((iss,i) => `
+    <div class="issue-item" id="iss-${i}" onclick="toggleIssue(${i})">
+      <div class="issue-cb"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div>
+        <div class="issue-text">${iss.text}</div>
+        <div style="margin-top:5px;display:flex;flex-wrap:wrap;gap:4px">
+          ${iss.tags.map(t=>`<span class="issue-tag" style="background:${tagBg(t)};color:#fff">${tagLabel(t)}</span>`).join('')}
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+function tagBg(t){ return {mimamori:'#1a4878',vital:'#0f6e56',haisetsu:'#c8760a',nurse:'#5436c8'}[t]||'#888' }
+function tagLabel(t){ return {mimamori:'見守り',vital:'バイタル',haisetsu:'排泄',nurse:'ナースコール'}[t]||t }
+
+function toggleIssue(i){
+  const iss = ISSUES[sys][i];
+  const el = g('iss-'+i);
+  const cls = sys==='next' ? 'checked' : 'checked-more';
+  if(checkedIssues.has(iss.id)){
+    checkedIssues.delete(iss.id);
+    el.classList.remove(cls);
+  } else {
+    checkedIssues.add(iss.id);
+    el.classList.add(cls);
+  }
+}
+
+// ============================================================
+// STEP2: センサー推奨カード構築
+// ============================================================
+function buildSensors(){
+  // スコアリング：チェックされた課題にマッチするセンサーをカウント
+  const scores = {};
+  Object.keys(SENSORS).forEach(k => scores[k] = 0);
+  checkedIssues.forEach(issId => {
+    Object.keys(SENSORS).forEach(k => {
+      if(SENSORS[k].issueMatch.includes(issId)) scores[k]++;
+    });
+  });
+
+  // スコア順にソート（0点でも表示するが順番を変える）
+  const order = Object.keys(SENSORS).sort((a,b) => scores[b]-scores[a]);
+
+  // 推奨バッジ
+  const recArea = g('recommend-area');
+  const topScore = Math.max(...Object.values(scores));
+  if(topScore > 0){
+    const rec = order.filter(k => scores[k]===topScore);
+    recArea.innerHTML = `<div class="recommend-badge">
+      ★ 選択した課題への適合度が最も高いのは <strong>${rec.map(k=>SENSORS[k].name).join('・')}</strong> です
+    </div>`;
+  } else {
+    recArea.innerHTML = `<div class="recommend-badge" style="background:rgba(26,72,120,.06);border-color:rgba(26,72,120,.2);color:var(--text2)">
+      課題を選択していない場合もすべてのセンサーから選べます
+    </div>`;
+  }
+
+  const grid = g('sensor-grid');
+  grid.innerHTML = order.map(k => {
+    const s = SENSORS[k];
+    const score = scores[k];
+    const isSelected = selectedSensors.has(k);
+    const matchPct = checkedIssues.size > 0 ? Math.round(score/checkedIssues.size*100) : 0;
+    return `
+    <div class="sensor-card ${s.type} ${isSelected?'selected':''}" id="sc-${k}" onclick="toggleSensor('${k}')">
+      <div class="sc-header">
+        <div class="sc-tag">${tagLabel(k)}</div>
+        ${score>0 ? `<div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:4px">課題マッチ度 ${matchPct}%</div>` : ''}
+        <div class="sc-name">${s.name}</div>
+      </div>
+      <div class="sc-body">
+        <div class="sc-desc">${s.desc}</div>
+        <div class="sc-effects">${s.effects.map(e=>`<span class="sc-effect">${e}</span>`).join('')}</div>
+        <div class="sc-check">
+          <div class="sc-check-dot">
+            <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1.5 4l1.8 1.8 3.2-3.6" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <span style="color:var(--text2)">${isSelected ? '選択中' : 'タップして選択'}</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleSensor(k){
+  if(selectedSensors.has(k)) selectedSensors.delete(k);
+  else selectedSensors.add(k);
+  buildSensors();
+}
+
+// ============================================================
+// STEP3: センサー詳細リスト＋試算
+// ============================================================
+function buildSensorDetail(){
+  const list = g('sensor-detail-list');
+  if(selectedSensors.size === 0){
+    list.innerHTML = '<p style="font-size:12px;color:var(--text3)">センサーが選択されていません。前のステップで選択してください。</p>';
+    return;
+  }
+  list.innerHTML = [...selectedSensors].map(k => {
+    const s = SENSORS[k];
+    return `
+    <div style="padding:12px 0;border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <span style="font-size:10px;font-family:var(--mono);padding:2px 7px;border-radius:3px;background:${tagBg(k)};color:#fff">${tagLabel(k)}</span>
+        <span style="font-size:13px;font-weight:500;color:var(--text)">${s.name}</span>
+      </div>
+      <div style="font-size:11px;color:var(--text3);line-height:1.6">${s.connectMakers.join('　/　')}</div>
+    </div>`;
+  }).join('') + '<div style="font-size:11px;color:var(--text3);margin-top:10px;font-family:var(--mono)">※価格・仕様は各センサーメーカーへお問い合わせください</div>';
+}
+
+function calcResult(){
+  const users  = +g('s-users').value;
+  const night  = +g('s-night').value;
+  const day    = +g('s-day').value;
+  const wage   = +g('s-wage').value;
+  const DAYS   = 30;
+  const NIGHT_ROUNDS_PER_PERSON_MONTH = 60; // 月間夜間確認回数（1利用者あたり）
+
+  let totalSaveHr = 0;
+  let nightSaveCount = 0;
+  const sensorSaves = [];
+
+  selectedSensors.forEach(k => {
+    const s = SENSORS[k];
+    let saveHr = 0, label = '';
+
+    if(k === 'mimamori'){
+      const nightRounds = users * NIGHT_ROUNDS_PER_PERSON_MONTH;
+      const nightSave = Math.round(nightRounds * s.nightRoundReduce);
+      nightSaveCount = nightSave;
+      const nightSaveHr = Math.round(nightSave * 5 / 60); // 1巡視5分換算
+      const recSave = Math.round(users * s.recTimeMin * DAYS / 60 * 0.3); // アラート記録削減
+      saveHr = nightSaveHr + recSave;
+      label = `見守りセンサー：巡視削減${nightSaveHr}h＋記録${recSave}h`;
+    }
+    if(k === 'vital'){
+      saveHr = Math.round(users * s.dailyMeasurePerUser * s.recTimeMin / 60 * DAYS);
+      label = `バイタル連携：転記削減${saveHr}h/月`;
+    }
+    if(k === 'haisetsu'){
+      const exchanges = users * s.exchangePerUser;
+      const reducedEx = Math.round(exchanges * s.reduceExchangePct);
+      saveHr = Math.round(reducedEx * s.minPerExchange / 60);
+      label = `排泄センサー：介助削減${saveHr}h/月（交換${reducedEx}回減）`;
+    }
+    if(k === 'nurse'){
+      const calls = Math.round(users / 10 * s.callsPerDayPer10 * DAYS);
+      saveHr = Math.round(calls * s.recTimeMin / 60);
+      label = `ナースコール連携：記録削減${saveHr}h/月`;
+    }
+
+    totalSaveHr += saveHr;
+    sensorSaves.push({ name:s.name, saveHr, label });
+  });
+
+  const saveYearCost = Math.round(totalSaveHr * wage * 12 / 10000);
+
+  g('r-total-save').textContent = Math.round(totalSaveHr);
+  g('r-year-cost').textContent  = saveYearCost;
+  g('r-night-save').textContent = nightSaveCount > 0 ? nightSaveCount : '--';
+
+  // sensor summary in panel
+  const summary = g('sensor-summary');
+  summary.innerHTML = sensorSaves.map(s => `
+    <div class="sr-item">
+      <span class="sr-name">${s.name}</span>
+      <span class="sr-val">${s.saveHr}h/月</span>
+    </div>`).join('');
+
+  // comment
+  let comment = '';
+  if(selectedSensors.size === 0){
+    comment = 'センサーを選択すると効果が表示されます。';
+  } else if(saveYearCost >= 50){
+    comment = `月間<strong>${Math.round(totalSaveHr)}時間</strong>の業務を削減。年間<strong>${saveYearCost}万円</strong>相当のコストを、直接ケアの質向上に回せます。${nightSaveCount>0?`夜間巡視を月<strong>${nightSaveCount}回</strong>削減することで、夜勤スタッフの負担も大幅に軽減されます。`:''}`;
+  } else {
+    comment = `月間<strong>${Math.round(totalSaveHr)}時間</strong>の削減効果が見込まれます。センサーを追加するほど効果は大きくなります。`;
+  }
+  g('r-comment').innerHTML = comment;
+}
+
+function sendLead(){
+  const email = g('inp-email').value.trim();
+  if(!email || !email.includes('@')){
+    g('inp-email').style.borderColor='var(--accent)';
+    setTimeout(()=>g('inp-email').style.borderColor='',1200);
+    return;
+  }
+  g('success').classList.add('show');
+  ['inp-email','inp-org'].forEach(id=>g(id).disabled=true);
+  const btn = document.querySelector('.btn-cta');
+  btn.disabled=true; btn.style.opacity='.4';
+}
+
+// ============================================================
+// init
+// ============================================================
+buildIssues();
+['users','night','day','wage'].forEach(id=>{
+  const el=g('s-'+id); if(!el)return;
+  const pct=(el.value-el.min)/(el.max-el.min)*100;
+  const f=g('f-'+id); if(f)f.style.width=pct+'%';
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>介護現場　業務負担診断シミュレーター</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=Zen+Kaku+Gothic+New:wght@700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f5f0e8;
+  --surface:#ffffff;
+  --surface2:#ede8e0;
+  --border:#e0d8cc;
+  --accent:#c84b2f;
+  --accent2:#2f6fc8;
+  --green:#2a7a50;
+  --text:#1a1410;
+  --text2:#5a4c40;
+  --text3:#a09080;
+  --mono:'DM Mono',monospace;
+  --sans:'Noto Sans JP',sans-serif;
+  --display:'Zen Kaku Gothic New',sans-serif;
+  --r:10px;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh}
+body::before{content:'';position:fixed;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+
+.wrapper{max-width:900px;margin:0 auto;padding:52px 24px 80px}
+
+.header{margin-bottom:36px;animation:fadeUp .45s ease both}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;letter-spacing:.12em;color:var(--accent);text-transform:uppercase;margin-bottom:14px}
+.eyebrow::before{content:'';width:20px;height:1px;background:var(--accent)}
+h1{font-family:var(--display);font-size:clamp(22px,3.8vw,34px);font-weight:900;letter-spacing:-.02em;line-height:1.2}
+h1 em{font-style:normal;color:var(--accent)}
+.header-desc{margin-top:10px;font-size:13px;color:var(--text2);font-weight:300;line-height:1.8;max-width:560px}
+
+.back-link{display:block;margin-bottom:28px;font-size:12px;color:var(--text3);font-family:var(--mono);letter-spacing:.04em;cursor:pointer;transition:color .2s}
+.back-link:hover{color:var(--accent)}
+
+/* layout */
+.layout{display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start}
+@media(max-width:700px){.layout{grid-template-columns:1fr}}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:26px;margin-bottom:14px}
+.card-label{font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--text3);text-transform:uppercase;margin-bottom:16px}
+
+/* facility selector */
+.sel-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:480px){.sel-grid{grid-template-columns:1fr}}
+.sel-btn{border:1.5px solid var(--border);border-radius:8px;padding:12px 13px;cursor:pointer;background:var(--surface);text-align:left;transition:all .2s;font-family:var(--sans)}
+.sel-btn:hover{border-color:var(--accent2)}
+.sel-btn.selected{border-color:var(--accent);background:rgba(200,75,47,.04)}
+.sel-btn-title{font-size:12px;font-weight:500;color:var(--text);margin-bottom:2px}
+.sel-btn-sub{font-size:10px;color:var(--text3)}
+
+/* slider */
+.slider-field{margin-bottom:22px}
+.slider-field:last-child{margin-bottom:0}
+.slider-label{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;gap:8px}
+.slider-label-text{font-size:13px;color:var(--text2);line-height:1.4}
+.slider-val{font-family:var(--mono);font-size:15px;font-weight:500;color:var(--text);flex-shrink:0}
+.slider-wrap{position:relative;height:20px;display:flex;align-items:center}
+input[type=range]{-webkit-appearance:none;width:100%;height:4px;background:var(--border);border-radius:2px;outline:none;cursor:pointer;position:relative;z-index:1}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;background:var(--surface);border:2px solid var(--accent);border-radius:50%;cursor:pointer;transition:transform .15s}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2)}
+.slider-fill{position:absolute;left:0;top:50%;height:4px;background:var(--accent);border-radius:2px;pointer-events:none;transform:translateY(-50%);z-index:0}
+
+/* note */
+.note{background:rgba(200,75,47,.06);border:1px solid rgba(200,75,47,.18);border-radius:8px;padding:12px 14px;font-size:12px;color:var(--text2);line-height:1.7;margin-top:14px}
+.note strong{color:var(--accent);font-weight:500}
+
+/* deep-dive links */
+.deepdive-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.deepdive-item{background:var(--surface);border:1.5px solid var(--border);border-radius:8px;padding:13px 14px;text-decoration:none;display:block;transition:border-color .2s}
+.deepdive-item:hover{border-color:var(--accent2)}
+.di-tag{font-size:10px;font-family:var(--mono);letter-spacing:.06em;margin-bottom:4px}
+.di-name{font-size:13px;font-weight:500;color:var(--text);margin-bottom:2px}
+.di-sub{font-size:11px;color:var(--text3)}
+
+/* sticky result */
+.result-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;position:sticky;top:24px;animation:fadeUp .45s .08s ease both}
+.rp-header{background:var(--accent);color:#fff;padding:18px 22px}
+.rp-title{font-size:13px;font-weight:500;margin-bottom:2px}
+.rp-sub{font-size:11px;opacity:.7;font-family:var(--mono)}
+
+.r-metric{padding:16px 22px;border-bottom:1px solid var(--border)}
+.r-lbl{font-size:10px;font-family:var(--mono);color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px}
+.r-num{font-family:var(--mono);font-size:clamp(20px,2.8vw,26px);font-weight:500;transition:all .3s cubic-bezier(.34,1.56,.64,1)}
+.r-num.red{color:var(--accent)}
+.r-num.blue{color:var(--accent2)}
+.r-num.green{color:var(--green)}
+.r-unit{font-size:11px;color:var(--text3)}
+
+.r-bd{background:var(--surface2)}
+.r-bd-header{padding:10px 22px;background:rgba(200,75,47,.08);font-size:10px;font-family:var(--mono);color:var(--accent);letter-spacing:.08em;text-transform:uppercase}
+.r-bd-item{padding:9px 22px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.r-bd-label{font-size:12px;color:var(--text2)}
+.r-bd-val{font-family:var(--mono);font-size:12px;font-weight:500;color:var(--text)}
+.r-bd-val.save{color:var(--green)}
+
+.r-comment{margin:14px 22px;padding:11px 13px;background:rgba(200,75,47,.07);border-left:3px solid var(--accent);border-radius:0 6px 6px 0;font-size:12px;color:var(--text2);line-height:1.75}
+.r-comment strong{color:var(--accent);font-weight:500}
+
+.r-cta{padding:16px 22px;border-top:1px solid var(--border);background:var(--surface2)}
+.r-cta-text{font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:10px}
+.r-cta-text strong{color:var(--text);font-weight:500}
+.inp{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:7px;font-family:var(--sans);font-size:13px;color:var(--text);padding:9px 12px;margin-bottom:8px;transition:border-color .2s}
+.inp:focus{outline:none;border-color:var(--accent)}
+.inp::placeholder{color:var(--text3)}
+.btn-send{width:100%;background:var(--accent);color:#fff;border:none;border-radius:7px;font-family:var(--sans);font-size:13px;font-weight:700;padding:11px;cursor:pointer;transition:opacity .2s}
+.btn-send:hover{opacity:.85}
+.success{display:none;align-items:center;gap:6px;background:rgba(42,122,80,.1);border:1px solid rgba(42,122,80,.3);border-radius:7px;padding:10px 12px;font-size:12px;color:var(--green)}
+.success.show{display:flex}
+.cta-note{font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:8px}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <div class="header">
+    <div class="eyebrow">業務改善シミュレーター　TYPE A</div>
+    <h1>介護現場の<em>業務負担</em>、<br>数字で見えていますか？</h1>
+    <p class="header-desc">施設種別・スタッフ規模・現状の業務時間を入力するだけで、隠れたコストと削減余地をリアルタイムで可視化します。</p>
+  </div>
+  <span class="back-link" onclick="history.back()">← トップに戻る</span>
+
+  <div class="layout">
+    <!-- LEFT -->
+    <div>
+      <div class="card" style="animation:fadeUp .4s ease both">
+        <div class="card-label">施設種別を選択</div>
+        <div class="sel-grid">
+          <button class="sel-btn" onclick="selFacility(this,'tokuyou',1.15)">
+            <div class="sel-btn-title">特別養護老人ホーム</div>
+            <div class="sel-btn-sub">特養・地域密着型特養</div>
+          </button>
+          <button class="sel-btn" onclick="selFacility(this,'rooken',1.1)">
+            <div class="sel-btn-title">介護老人保健施設</div>
+            <div class="sel-btn-sub">老健・通所リハビリ</div>
+          </button>
+          <button class="sel-btn" onclick="selFacility(this,'kyotaku',1.0)">
+            <div class="sel-btn-title">居宅介護支援事業所</div>
+            <div class="sel-btn-sub">ケアマネ事業所</div>
+          </button>
+          <button class="sel-btn" onclick="selFacility(this,'tsusho',1.0)">
+            <div class="sel-btn-title">通所介護・デイサービス</div>
+            <div class="sel-btn-sub">通所リハビリ含む</div>
+          </button>
+          <button class="sel-btn" onclick="selFacility(this,'gh',0.95)">
+            <div class="sel-btn-title">グループホーム</div>
+            <div class="sel-btn-sub">認知症対応型共同生活</div>
+          </button>
+          <button class="sel-btn" onclick="selFacility(this,'other',1.0)">
+            <div class="sel-btn-title">その他・複合施設</div>
+            <div class="sel-btn-sub">複数サービス等</div>
+          </button>
+        </div>
+      </div>
+
+      <div class="card" style="animation:fadeUp .4s .06s ease both">
+        <div class="card-label">スタッフ・規模</div>
+        <div class="slider-field">
+          <div class="slider-label">
+            <span class="slider-label-text">介護・支援スタッフ数（常勤換算）</span>
+            <span class="slider-val" id="v-staff">20名</span>
+          </div>
+          <div class="slider-wrap">
+            <div class="slider-fill" id="f-staff"></div>
+            <input type="range" id="s-staff" min="3" max="150" value="20" step="1" oninput="sv('staff',this.value,v=>v+'名');calc()">
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="animation:fadeUp .4s .10s ease both">
+        <div class="card-label">現在の業務時間（月次・全体）</div>
+        <div class="slider-field">
+          <div class="slider-label">
+            <span class="slider-label-text">ケア記録入力にかかる時間（1人・1日あたり）</span>
+            <span class="slider-val" id="v-rec">45分</span>
+          </div>
+          <div class="slider-wrap">
+            <div class="slider-fill" id="f-rec"></div>
+            <input type="range" id="s-rec" min="10" max="120" value="45" step="5" oninput="sv('rec',this.value,v=>v+'分');calc()">
+          </div>
+        </div>
+        <div class="slider-field">
+          <div class="slider-label">
+            <span class="slider-label-text">計画書・報告書等の書類作成（月間・全体）</span>
+            <span class="slider-val" id="v-doc">20時間</span>
+          </div>
+          <div class="slider-wrap">
+            <div class="slider-fill" id="f-doc"></div>
+            <input type="range" id="s-doc" min="1" max="100" value="20" step="1" oninput="sv('doc',this.value,v=>v+'時間');calc()">
+          </div>
+        </div>
+        <div class="slider-field">
+          <div class="slider-label">
+            <span class="slider-label-text">月次請求作業にかかる時間（月間・全体）</span>
+            <span class="slider-val" id="v-bill">15時間</span>
+          </div>
+          <div class="slider-wrap">
+            <div class="slider-fill" id="f-bill"></div>
+            <input type="range" id="s-bill" min="1" max="80" value="15" step="1" oninput="sv('bill',this.value,v=>v+'時間');calc()">
+          </div>
+        </div>
+        <div class="slider-field" style="margin-bottom:0">
+          <div class="slider-label">
+            <span class="slider-label-text">職員の平均時給</span>
+            <span class="slider-val" id="v-wage">1,500円</span>
+          </div>
+          <div class="slider-wrap">
+            <div class="slider-fill" id="f-wage"></div>
+            <input type="range" id="s-wage" min="1000" max="3500" value="1500" step="100" oninput="sv('wage',this.value,v=>Number(v).toLocaleString()+'円');calc()">
+          </div>
+        </div>
+      </div>
+
+      <!-- deep dive links -->
+      <div class="card" style="animation:fadeUp .4s .14s ease both">
+        <div class="card-label">課題別の詳細ROIを試算する</div>
+        <div class="deepdive-grid">
+          <a class="deepdive-item" href="roi_simulator_typeB1.html">
+            <div class="di-tag" style="color:#2f6fc8">記録・業務支援</div>
+            <div class="di-name">ほのぼのNEXT</div>
+            <div class="di-sub">記録時間削減の詳細試算 →</div>
+          </a>
+          <a class="deepdive-item" href="roi_simulator_typeB2.html">
+            <div class="di-tag" style="color:#5436c8">障害福祉サービス</div>
+            <div class="di-name">ほのぼのmore</div>
+            <div class="di-sub">支援記録・請求コスト削減 →</div>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="result-panel">
+      <div class="rp-header">
+        <div class="rp-title">業務負担　診断結果</div>
+        <div class="rp-sub" id="rp-facility">施設種別を選択してください</div>
+      </div>
+
+      <div class="r-metric">
+        <div class="r-lbl">月間　記録・書類・請求の総工数</div>
+        <div class="r-num red" id="r-total">--</div>
+        <div class="r-unit">時間 / 月</div>
+      </div>
+      <div class="r-metric">
+        <div class="r-lbl">年間換算コスト</div>
+        <div class="r-num blue" id="r-year">--</div>
+        <div class="r-unit">万円 / 年</div>
+      </div>
+      <div class="r-metric">
+        <div class="r-lbl">テクノロジーで削減できる推定値</div>
+        <div class="r-num green" id="r-save">--</div>
+        <div class="r-unit">時間 / 月</div>
+      </div>
+
+      <div class="r-bd">
+        <div class="r-bd-header">内訳</div>
+        <div class="r-bd-item">
+          <span class="r-bd-label">記録入力（全職員・月間）</span>
+          <span class="r-bd-val" id="bd-rec">--</span>
+        </div>
+        <div class="r-bd-item">
+          <span class="r-bd-label">計画書・書類作成</span>
+          <span class="r-bd-val" id="bd-doc">--</span>
+        </div>
+        <div class="r-bd-item">
+          <span class="r-bd-label">月次請求業務</span>
+          <span class="r-bd-val" id="bd-bill">--</span>
+        </div>
+        <div class="r-bd-item" style="border-top:2px solid var(--border)">
+          <span class="r-bd-label" style="font-weight:500">削減可能（推定）</span>
+          <span class="r-bd-val save" id="bd-save">--</span>
+        </div>
+      </div>
+
+      <div class="r-comment" id="r-comment">施設種別を選択して入力を始めてください。</div>
+
+      <div class="r-cta">
+        <p class="r-cta-text">この診断結果と<strong>削減提案レポート</strong>を無料でお送りします</p>
+        <input class="inp" type="email" id="inp-email" placeholder="メールアドレス">
+        <input class="inp" type="text"  id="inp-name"  placeholder="法人名・施設名（任意）">
+        <button class="btn-send" onclick="sendLead()">レポートを受け取る</button>
+        <div class="success" id="success">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="#2a7a50" stroke-width="1.5"/><path d="M5 8l2 2 4-4" stroke="#2a7a50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          送信完了。担当者よりご連絡します。
+        </div>
+        <p class="cta-note">※ 個人情報はND Softwareが適切に管理します</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script>
+const FACILITY_NAMES={tokuyou:'特別養護老人ホーム',rooken:'介護老人保健施設',kyotaku:'居宅介護支援事業所',tsusho:'通所介護・デイサービス',gh:'グループホーム',other:'その他・複合施設'};
+const REDUCE={rec:0.65,doc:0.55,bill:0.50};
+let factor=1.0;
+
+function g(id){return document.getElementById(id)}
+
+function sv(id,val,fmt){
+  g('v-'+id).textContent=fmt(val);
+  const el=g('s-'+id);
+  const pct=(val-el.min)/(el.max-el.min)*100;
+  g('f-'+id).style.width=pct+'%';
+}
+
+function selFacility(btn,type,f){
+  document.querySelectorAll('.sel-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  factor=f;
+  g('rp-facility').textContent=FACILITY_NAMES[type]||'施設';
+  calc();
+}
+
+function calc(){
+  const staff=+g('s-staff').value;
+  const recMin=+g('s-rec').value;
+  const docHr=+g('s-doc').value;
+  const billHr=+g('s-bill').value;
+  const wage=+g('s-wage').value;
+
+  const recHrMonth=recMin/60*staff*22*factor;
+  const totalHr=recHrMonth+docHr+billHr;
+  const yearCost=Math.round(totalHr*wage*12/10000);
+
+  const saveRec=recHrMonth*REDUCE.rec;
+  const saveDoc=docHr*REDUCE.doc;
+  const saveBill=billHr*REDUCE.bill;
+  const saveTotal=saveRec+saveDoc+saveBill;
+  const saveCostYear=Math.round(saveTotal*wage*12/10000);
+  const savePct=totalHr>0?Math.round(saveTotal/totalHr*100):0;
+
+  g('r-total').textContent=Math.round(totalHr);
+  g('r-year').textContent=yearCost;
+  g('r-save').textContent=Math.round(saveTotal);
+  g('bd-rec').textContent=Math.round(recHrMonth)+'時間';
+  g('bd-doc').textContent=docHr+'時間';
+  g('bd-bill').textContent=billHr+'時間';
+  g('bd-save').textContent=Math.round(saveTotal)+'時間/月';
+
+  let comment='';
+  if(totalHr===0){comment='入力内容に応じて診断結果が表示されます。';}
+  else if(savePct>=50){
+    comment=`月間<strong>${Math.round(totalHr)}時間</strong>の工数のうち推定<strong>${savePct}%（約${Math.round(saveTotal)}時間）</strong>を削減できる可能性があります。年間換算で<strong>約${saveCostYear}万円相当</strong>のコスト削減が見込めます。`;
+  } else {
+    comment=`月間<strong>${Math.round(totalHr)}時間</strong>が記録・書類・請求業務に費やされています。適切なシステム導入により推定<strong>${savePct}%（約${Math.round(saveTotal)}時間/月）</strong>の削減が見込まれます。`;
+  }
+  g('r-comment').innerHTML=comment;
+}
+
+function sendLead(){
+  const email=g('inp-email').value.trim();
+  if(!email||!email.includes('@')){
+    g('inp-email').style.borderColor='var(--accent)';
+    setTimeout(()=>g('inp-email').style.borderColor='',1200);
+    return;
+  }
+  g('success').classList.add('show');
+  ['inp-email','inp-name'].forEach(id=>g(id).disabled=true);
+  const btn=document.querySelector('.btn-send');
+  btn.disabled=true;btn.style.opacity='.4';
+}
+
+['staff','rec','doc','bill','wage'].forEach(id=>{
+  const el=g('s-'+id);if(!el)return;
+  const pct=(el.value-el.min)/(el.max-el.min)*100;
+  const f=g('f-'+id);if(f)f.style.width=pct+'%';
+});
+calc();
+</script>
+</body>
+</html>

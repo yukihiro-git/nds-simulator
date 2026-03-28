@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Care Palette　記録電子化シミュレーター</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=Zen+Kaku+Gothic+New:wght@700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f3f7f4;
+  --surface:#ffffff;
+  --surface2:#e8f0ea;
+  --border:#ccddd0;
+
+  /* Care Palette (施設・通所) */
+  --cp-accent:#1a7848;
+  --cp-accent2:#28a86a;
+  --cp-light:#eaf5ef;
+
+  /* Care Palette Home/Nurse (訪問) */
+  --cph-accent:#1a5898;
+  --cph-accent2:#2878d8;
+  --cph-light:#eaf0fb;
+
+  --accent:var(--cp-accent);
+  --accent2:var(--cp-accent2);
+  --accent-light:var(--cp-light);
+
+  --green:#2a7a50;
+  --green-bg:#eaf5f0;
+  --red:#c84b2f;
+  --text:#0e1a10;
+  --text2:#3a5040;
+  --text3:#7a9880;
+  --mono:'DM Mono',monospace;
+  --sans:'Noto Sans JP',sans-serif;
+  --display:'Zen Kaku Gothic New',sans-serif;
+  --r:10px;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh}
+body::before{content:'';position:fixed;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--cp-accent),var(--cph-accent))}
+
+.wrapper{max-width:900px;margin:0 auto;padding:52px 24px 80px}
+
+.header{margin-bottom:32px;animation:fadeUp .45s ease both}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-family:var(--mono);letter-spacing:.12em;color:var(--cp-accent);text-transform:uppercase;margin-bottom:12px}
+.eyebrow::before{content:'';width:20px;height:1px;background:var(--cp-accent)}
+h1{font-family:var(--display);font-size:clamp(22px,3.6vw,32px);font-weight:900;letter-spacing:-.02em;line-height:1.2;margin-bottom:8px}
+h1 em{font-style:normal;color:var(--cp-accent)}
+.header-desc{font-size:13px;color:var(--text2);line-height:1.8;font-weight:300;max-width:580px}
+
+/* ===== PRODUCT TAB SWITCH ===== */
+.tab-switch{
+  display:grid;grid-template-columns:1fr 1fr;
+  border:1.5px solid var(--border);
+  border-radius:12px;overflow:hidden;
+  margin-bottom:28px;
+  animation:fadeUp .45s .06s ease both;
+}
+.tab-btn{
+  padding:18px 20px;cursor:pointer;
+  border:none;background:var(--surface);
+  display:flex;flex-direction:column;gap:4px;
+  text-align:left;transition:all .25s;
+  position:relative;
+}
+.tab-btn:first-child{border-right:1px solid var(--border)}
+.tab-btn.active-cp{background:var(--cp-light);border-bottom:3px solid var(--cp-accent)}
+.tab-btn.active-cph{background:var(--cph-light);border-bottom:3px solid var(--cph-accent)}
+.tab-dot{
+  width:8px;height:8px;border-radius:50%;
+  display:inline-block;margin-right:6px;
+  vertical-align:middle;
+}
+.tab-dot-cp{background:var(--cp-accent)}
+.tab-dot-cph{background:var(--cph-accent)}
+.tab-name{font-size:15px;font-weight:700;color:var(--text);font-family:var(--display);letter-spacing:-.01em}
+.tab-sub{font-size:11px;color:var(--text3);font-family:var(--mono);letter-spacing:.04em}
+.tab-badge{
+  position:absolute;top:12px;right:12px;
+  font-size:9px;font-family:var(--mono);letter-spacing:.06em;
+  padding:2px 7px;border-radius:3px;
+}
+.tab-badge-cp{background:var(--cp-accent);color:#fff}
+.tab-badge-cph{background:var(--cph-accent);color:#fff}
+
+.back-link{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--text3);font-family:var(--mono);letter-spacing:.04em;margin-bottom:28px;cursor:pointer;transition:color .2s;display:block}
+.back-link:hover{color:var(--cp-accent)}
+
+/* layout */
+.layout{display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start}
+@media(max-width:700px){.layout{grid-template-columns:1fr}}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:28px;margin-bottom:16px}
+.card-label{font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--text3);text-transform:uppercase;margin-bottom:18px}
+
+/* service type selector */
+.sel-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:480px){.sel-grid{grid-template-columns:1fr}}
+.sel-btn{border:1.5px solid var(--border);border-radius:8px;padding:11px 13px;cursor:pointer;background:var(--surface);text-align:left;transition:all .2s;font-family:var(--sans)}
+.sel-btn:hover{border-color:var(--cp-accent2)}
+.sel-btn.sel-active-cp{border-color:var(--cp-accent);background:var(--cp-light)}
+.sel-btn.sel-active-cph{border-color:var(--cph-accent);background:var(--cph-light)}
+.sel-btn-title{font-size:12px;font-weight:500;color:var(--text);margin-bottom:2px;line-height:1.3}
+.sel-btn-sub{font-size:10px;color:var(--text3)}
+
+/* slider */
+.slider-field{margin-bottom:22px}
+.slider-field:last-child{margin-bottom:0}
+.slider-label{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;gap:8px}
+.slider-label-text{font-size:13px;color:var(--text2);line-height:1.4}
+.slider-val{font-family:var(--mono);font-size:15px;font-weight:500;color:var(--text);flex-shrink:0}
+.slider-wrap{position:relative;height:20px;display:flex;align-items:center}
+input[type=range]{-webkit-appearance:none;width:100%;height:4px;background:var(--border);border-radius:2px;outline:none;cursor:pointer;position:relative;z-index:1}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;background:var(--surface);border:2px solid var(--cp-accent);border-radius:50%;cursor:pointer;transition:transform .15s}
+input[type=range].cph-thumb::-webkit-slider-thumb{border-color:var(--cph-accent)}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2)}
+.slider-fill{position:absolute;left:0;top:50%;height:4px;background:var(--cp-accent);border-radius:2px;pointer-events:none;transform:translateY(-50%);z-index:0;transition:background .3s}
+.slider-fill.cph{background:var(--cph-accent)}
+
+/* feature toggle panels */
+.feature-panel{display:none}
+.feature-panel.show{display:block}
+
+.feature-list{list-style:none;display:flex;flex-direction:column;gap:9px}
+.feature-item{display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--text2);line-height:1.6}
+.feature-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:6px}
+.feature-dot-cp{background:var(--cp-accent)}
+.feature-dot-cph{background:var(--cph-accent)}
+
+/* sticky result */
+.result-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;position:sticky;top:24px;animation:fadeUp .45s .1s ease both;transition:all .3s}
+.rp-header{padding:18px 22px;color:#fff;transition:background .3s}
+.rp-header-cp{background:var(--cp-accent)}
+.rp-header-cph{background:var(--cph-accent)}
+.rp-title{font-size:13px;font-weight:500;margin-bottom:2px}
+.rp-sub{font-size:11px;opacity:.7;font-family:var(--mono)}
+
+.r-metric{padding:16px 22px;border-bottom:1px solid var(--border)}
+.r-lbl{font-size:10px;font-family:var(--mono);color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px}
+.r-num{font-family:var(--mono);font-size:clamp(20px,2.8vw,26px);font-weight:500;transition:all .3s cubic-bezier(.34,1.56,.64,1),color .3s}
+.r-num.cp-color{color:var(--cp-accent)}
+.r-num.cph-color{color:var(--cph-accent)}
+.r-num.green{color:var(--green)}
+.r-unit{font-size:11px;color:var(--text3)}
+
+/* bar comparison */
+.r-bar{padding:16px 22px;border-bottom:1px solid var(--border)}
+.r-bar-lbl{font-size:10px;font-family:var(--mono);color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px}
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.bar-row:last-child{margin-bottom:0}
+.bar-label{font-size:11px;color:var(--text3);width:52px;flex-shrink:0;text-align:right;line-height:1.3}
+.bar-track{flex:1;height:20px;background:var(--surface2);border-radius:4px;overflow:hidden;position:relative}
+.bar-fill{height:100%;border-radius:4px;display:flex;align-items:center;padding-left:8px;transition:width .5s cubic-bezier(.34,1.2,.64,1),background .3s}
+.bar-fill.before{background:rgba(200,75,47,.2)}
+.bar-fill.after-cp{background:rgba(26,120,72,.25)}
+.bar-fill.after-cph{background:rgba(26,88,152,.25)}
+.bar-val{font-family:var(--mono);font-size:10px;white-space:nowrap;color:var(--text);position:absolute;right:7px;top:50%;transform:translateY(-50%)}
+
+/* breakdown */
+.r-bd{background:var(--surface2)}
+.r-bd-header{padding:10px 22px;font-size:10px;font-family:var(--mono);letter-spacing:.08em;text-transform:uppercase;transition:color .3s,background .3s}
+.r-bd-header-cp{color:var(--cp-accent);background:rgba(26,120,72,.08)}
+.r-bd-header-cph{color:var(--cph-accent);background:rgba(26,88,152,.08)}
+.r-bd-item{padding:9px 22px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.r-bd-label{font-size:12px;color:var(--text2)}
+.r-bd-val{font-family:var(--mono);font-size:12px;font-weight:500}
+.r-bd-val.save{color:var(--green)}
+.r-bd-val.neutral{color:var(--text)}
+
+.r-comment{margin:16px 22px;padding:12px 14px;border-left:3px solid var(--cp-accent);border-radius:0 6px 6px 0;font-size:12px;color:var(--text2);line-height:1.75;background:rgba(26,120,72,.07);transition:border-color .3s,background .3s}
+.r-comment.cph-comment{border-color:var(--cph-accent);background:rgba(26,88,152,.07)}
+.r-comment strong{font-weight:500}
+.r-comment.cp-comment strong{color:var(--cp-accent)}
+.r-comment.cph-comment strong{color:var(--cph-accent)}
+
+.r-cta{padding:18px 22px;border-top:1px solid var(--border);background:var(--surface2)}
+.r-cta-text{font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:12px}
+.r-cta-text strong{color:var(--text);font-weight:500}
+.inp{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:7px;font-family:var(--sans);font-size:13px;color:var(--text);padding:9px 12px;margin-bottom:8px;transition:border-color .2s}
+.inp:focus{outline:none;border-color:var(--cp-accent)}
+.btn-send{width:100%;color:#fff;border:none;border-radius:7px;font-family:var(--sans);font-size:13px;font-weight:700;padding:11px;cursor:pointer;transition:opacity .2s,background .3s}
+.btn-send-cp{background:var(--cp-accent)}
+.btn-send-cph{background:var(--cph-accent)}
+.btn-send:hover{opacity:.85}
+.success{display:none;align-items:center;gap:6px;background:var(--green-bg);border:1px solid rgba(42,122,80,.3);border-radius:7px;padding:10px 12px;font-size:12px;color:var(--green)}
+.success.show{display:flex}
+.cta-note{font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:8px}
+
+/* note box */
+.note{border-radius:8px;padding:12px 14px;font-size:12px;line-height:1.7;margin-top:16px;transition:background .3s,border-color .3s}
+.note-cp{background:var(--cp-light);border:1px solid rgba(26,120,72,.2)}
+.note-cph{background:var(--cph-light);border:1px solid rgba(26,88,152,.2)}
+.note strong{font-weight:500}
+.note-cp strong{color:var(--cp-accent)}
+.note-cph strong{color:var(--cph-accent)}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="eyebrow">ほのぼのNEXT　連携タブレットアプリ</div>
+    <h1>紙・手書き記録から<em>卒業</em>する。<br>現場の記録コストを数字で確認。</h1>
+    <p class="header-desc">Care PaletteシリーズはほのぼのNEXTと連携するタブレット記録アプリです。現場の記録にかかっている時間・コストを入力して、電子化の効果を試算します。</p>
+  </div>
+
+  <!-- PRODUCT TAB SWITCH -->
+  <div class="tab-switch">
+    <button class="tab-btn active-cp" id="tab-cp" onclick="switchProduct('cp')">
+      <div class="tab-badge tab-badge-cp">施設・通所・入居系</div>
+      <div class="tab-name"><span class="tab-dot tab-dot-cp"></span>Care Palette</div>
+      <div class="tab-sub">タブレット記録　施設・通所向け</div>
+    </button>
+    <button class="tab-btn" id="tab-cph" onclick="switchProduct('cph')">
+      <div class="tab-badge tab-badge-cph">訪問系サービス</div>
+      <div class="tab-name"><span class="tab-dot tab-dot-cph"></span>Care Palette Home/Nurse</div>
+      <div class="tab-sub">訪問記録　直行直帰対応</div>
+    </button>
+  </div>
+
+  <span class="back-link" onclick="history.back()">← トップに戻る</span>
+
+  <div class="layout">
+    <!-- LEFT -->
+    <div>
+
+      <!-- サービス種別（Care Palette用） -->
+      <div class="card feature-panel show" id="panel-cp-type" style="animation:fadeUp .4s ease both">
+        <div class="card-label">サービス種別を選択</div>
+        <div class="sel-grid">
+          <button class="sel-btn sel-active-cp" onclick="selType(this,'nyukyo',1.1,'cp')">
+            <div class="sel-btn-title">特養・老健・入居系</div>
+            <div class="sel-btn-sub">入所系施設サービス</div>
+          </button>
+          <button class="sel-btn" onclick="selType(this,'tsusho',1.0,'cp')">
+            <div class="sel-btn-title">通所介護・デイサービス</div>
+            <div class="sel-btn-sub">通所系サービス</div>
+          </button>
+          <button class="sel-btn" onclick="selType(this,'shogai',1.05,'cp')">
+            <div class="sel-btn-title">障害福祉施設・通所</div>
+            <div class="sel-btn-sub">障がい者支援サービス</div>
+          </button>
+          <button class="sel-btn" onclick="selType(this,'other_cp',1.0,'cp')">
+            <div class="sel-btn-title">その他・複合</div>
+            <div class="sel-btn-sub">複数サービス等</div>
+          </button>
+        </div>
+      </div>
+
+      <!-- サービス種別（Care Palette Home用） -->
+      <div class="card feature-panel" id="panel-cph-type" style="animation:fadeUp .4s ease both">
+        <div class="card-label">訪問サービス種別を選択</div>
+        <div class="sel-grid">
+          <button class="sel-btn sel-active-cph" onclick="selType(this,'houmon_kaigo',1.1,'cph')">
+            <div class="sel-btn-title">訪問介護</div>
+            <div class="sel-btn-sub">介護・総合事業</div>
+          </button>
+          <button class="sel-btn" onclick="selType(this,'houmon_kango',1.15,'cph')">
+            <div class="sel-btn-title">訪問看護</div>
+            <div class="sel-btn-sub">介護・予防・医療</div>
+          </button>
+          <button class="sel-btn" onclick="selType(this,'houmon_reha',1.05,'cph')">
+            <div class="sel-btn-title">訪問リハビリ</div>
+            <div class="sel-btn-sub">介護・予防</div>
+          </button>
+          <button class="sel-btn" onclick="selType(this,'teikijunkai',1.2,'cph')">
+            <div class="sel-btn-title">定期巡回・随時対応</div>
+            <div class="sel-btn-sub">夜間対応含む</div>
+          </button>
+        </div>
+      </div>
+
+      <!-- 規模・工数入力（共通） -->
+      <div class="card" style="animation:fadeUp .4s .06s ease both">
+        <div class="card-label">事業所の規模</div>
+        <div class="slider-field">
+          <div class="slider-label">
+            <span class="slider-label-text">介護・支援スタッフ数</span>
+            <span class="slider-val" id="v-staff">20名</span>
+          </div>
+          <div class="slider-wrap">
+            <div class="slider-fill" id="f-staff"></div>
+            <input type="range" id="s-staff" min="3" max="150" value="20" step="1" oninput="sv('staff',this.value,v=>v+'名');calc()">
+          </div>
+        </div>
+        <div class="slider-field">
+          <div class="slider-label">
+            <span class="slider-label-text" id="label-users">利用者数</span>
+            <span class="slider-val" id="v-users">40名</span>
+          </div>
+          <div class="slider-wrap">
+            <div class="slider-fill" id="f-users"></div>
+            <input type="range" id="s-users" min="5" max="200" value="40" step="5" oninput="sv('users',this.value,v=>v+'名');calc()">
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="animation:fadeUp .4s .10s ease both">
+        <div class="card-label">現在の記録業務（1人・1日あたり）</div>
+        <div class="slider-field">
+          <div class="slider-label">
+            <span class="slider-label-text">記録入力・手書き時間</span>
+            <span class="slider-val" id="v-rec">45分</span>
+          </div>
+          <div class="slider-wrap">
+            <div class="slider-fill" id="f-rec"></div>
+            <input type="range" id="s-rec" min="10" max="120" value="45" step="5" oninput="sv('rec',this.value,v=>v+'分');calc()">
+          </div>
+        </div>
+
+        <!-- Care Palette固有 -->
+        <div class="feature-panel show" id="panel-cp-extra">
+          <div class="slider-field">
+            <div class="slider-label">
+              <span class="slider-label-text">ファイル・紙資料の持参・管理時間</span>
+              <span class="slider-val" id="v-paper">15分</span>
+            </div>
+            <div class="slider-wrap">
+              <div class="slider-fill" id="f-paper"></div>
+              <input type="range" id="s-paper" min="0" max="60" value="15" step="5" oninput="sv('paper',this.value,v=>v+'分');calc()">
+            </div>
+          </div>
+          <div class="slider-field" style="margin-bottom:0">
+            <div class="slider-label">
+              <span class="slider-label-text">申し送り・情報共有にかかる時間</span>
+              <span class="slider-val" id="v-report">20分</span>
+            </div>
+            <div class="slider-wrap">
+              <div class="slider-fill" id="f-report"></div>
+              <input type="range" id="s-report" min="0" max="60" value="20" step="5" oninput="sv('report',this.value,v=>v+'分');calc()">
+            </div>
+          </div>
+        </div>
+
+        <!-- Care Palette Home固有 -->
+        <div class="feature-panel" id="panel-cph-extra">
+          <div class="slider-field">
+            <div class="slider-label">
+              <span class="slider-label-text">事業所への帰社・記録のための往復時間（1日）</span>
+              <span class="slider-val" id="v-commute">30分</span>
+            </div>
+            <div class="slider-wrap">
+              <div class="slider-fill cph" id="f-commute"></div>
+              <input type="range" id="s-commute" class="cph-thumb" min="0" max="120" value="30" step="10" oninput="sv('commute',this.value,v=>v+'分');calc()">
+            </div>
+          </div>
+          <div class="slider-field" style="margin-bottom:0">
+            <div class="slider-label">
+              <span class="slider-label-text">電話連絡・口頭報告の時間（1日）</span>
+              <span class="slider-val" id="v-tel">20分</span>
+            </div>
+            <div class="slider-wrap">
+              <div class="slider-fill cph" id="f-tel"></div>
+              <input type="range" id="s-tel" class="cph-thumb" min="0" max="60" value="20" step="5" oninput="sv('tel',this.value,v=>v+'分');calc()">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="animation:fadeUp .4s .14s ease both">
+        <div class="slider-field" style="margin-bottom:0">
+          <div class="slider-label">
+            <span class="slider-label-text">スタッフの平均時給</span>
+            <span class="slider-val" id="v-wage">1,500円</span>
+          </div>
+          <div class="slider-wrap">
+            <div class="slider-fill" id="f-wage"></div>
+            <input type="range" id="s-wage" min="1000" max="3000" value="1500" step="100" oninput="sv('wage',this.value,v=>Number(v).toLocaleString()+'円');calc()">
+          </div>
+        </div>
+      </div>
+
+      <!-- 機能特長（Care Palette） -->
+      <div class="card feature-panel show" id="panel-cp-feat" style="animation:fadeUp .4s .18s ease both">
+        <div class="card-label">Care Palette の主な特長</div>
+        <ul class="feature-list">
+          <li class="feature-item"><span class="feature-dot feature-dot-cp"></span>紙より早く、どこでも記録。メモの転記が不要になり記録時間を大幅削減</li>
+          <li class="feature-item"><span class="feature-dot feature-dot-cp"></span>バイタル・食事・排泄・入浴など幅広い記録項目をタブレット一台で完結</li>
+          <li class="feature-item"><span class="feature-dot feature-dot-cp"></span>ケアプラン計画書・R4計画書をタブレットで参照しながらケア提供が可能</li>
+          <li class="feature-item"><span class="feature-dot feature-dot-cp"></span>バイタル機器との連携で数値を自動取り込み。入力ミス・転記ミスをゼロへ</li>
+          <li class="feature-item"><span class="feature-dot feature-dot-cp"></span>多言語アプリ（オプション）で外国人介護職員の記録・情報把握をサポート</li>
+          <li class="feature-item"><span class="feature-dot feature-dot-cp"></span>介護保険・障がい者総合支援法の両方に対応。操作感が共通で使いやすい</li>
+        </ul>
+        <div class="note note-cp">
+          <strong>Care Paletteの利用には：</strong>ほのぼのNEXTのケア総合記録システム（またはデイ版）が必要です。障がい者施設では障がい者総合支援法対応版 支援記録システムが必須です。
+        </div>
+      </div>
+
+      <!-- 機能特長（Care Palette Home） -->
+      <div class="card feature-panel" id="panel-cph-feat" style="animation:fadeUp .4s .18s ease both">
+        <div class="card-label">Care Palette Home/Nurse の主な特長</div>
+        <ul class="feature-list">
+          <li class="feature-item"><span class="feature-dot feature-dot-cph"></span>訪問先で記録入力・実績登録が完結。事業所への帰社が不要になり直行直帰を実現</li>
+          <li class="feature-item"><span class="feature-dot feature-dot-cph"></span>訪問予定・実績・記録を一元管理。電話での報告・連絡が大幅削減</li>
+          <li class="feature-item"><span class="feature-dot feature-dot-cph"></span>入室・退室の時刻と位置情報を自動取得。特定事業所加算の要件に対応</li>
+          <li class="feature-item"><span class="feature-dot feature-dot-cph"></span>電子サイン機能で利用者・ご家族のサインをその場でタブレット記録</li>
+          <li class="feature-item"><span class="feature-dot feature-dot-cph"></span>PUSH通知で訪問予定変更を即時共有。「見た・見ていない」を管理者が確認可能</li>
+          <li class="feature-item"><span class="feature-dot feature-dot-cph"></span>訪問介護・訪問看護・訪問入浴・定期巡回・訪問リハビリ・障害者訪問系に対応</li>
+        </ul>
+        <div class="note note-cph">
+          <strong>Care Palette Home/Nurseの利用には：</strong>ほのぼのNEXTとの連携が必要です。障がい者訪問系サービスはほのぼのNEXT訪問スケジュール上での一元管理が必要です。
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT: sticky result -->
+    <div class="result-panel">
+      <div class="rp-header rp-header-cp" id="rp-header">
+        <div class="rp-title" id="rp-title">Care Palette　導入効果試算</div>
+        <div class="rp-sub" id="rp-sub">入居系施設</div>
+      </div>
+
+      <div class="r-metric">
+        <div class="r-lbl">月間　記録業務の総工数</div>
+        <div class="r-num cp-color" id="r-total">--</div>
+        <div class="r-unit">時間 / 月（現状）</div>
+      </div>
+      <div class="r-metric">
+        <div class="r-lbl">月間削減時間（導入後）</div>
+        <div class="r-num green" id="r-save-hrs">--</div>
+        <div class="r-unit">時間 / 月</div>
+      </div>
+      <div class="r-metric">
+        <div class="r-lbl">年間削減コスト換算</div>
+        <div class="r-num green" id="r-save-cost">--</div>
+        <div class="r-unit">万円 / 年</div>
+      </div>
+
+      <!-- bar -->
+      <div class="r-bar">
+        <div class="r-bar-lbl">業務時間　現状 vs 導入後</div>
+        <div class="bar-row">
+          <div class="bar-label">現状</div>
+          <div class="bar-track">
+            <div class="bar-fill before" id="bar-before" style="width:100%"></div>
+            <div class="bar-val" id="bar-before-val">-- 時間</div>
+          </div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">導入後</div>
+          <div class="bar-track">
+            <div class="bar-fill after-cp" id="bar-after" style="width:40%"></div>
+            <div class="bar-val" id="bar-after-val">-- 時間</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="r-bd">
+        <div class="r-bd-header r-bd-header-cp" id="bd-header">削減効果内訳</div>
+        <div class="r-bd-item">
+          <span class="r-bd-label">記録入力時間の削減</span>
+          <span class="r-bd-val save" id="bd-rec">--時間/月</span>
+        </div>
+        <div class="r-bd-item" id="bd-paper-row">
+          <span class="r-bd-label" id="bd-extra-label">紙資料・移動時間の削減</span>
+          <span class="r-bd-val save" id="bd-extra">--時間/月</span>
+        </div>
+        <div class="r-bd-item">
+          <span class="r-bd-label" id="bd-comms-label">情報共有・連絡時間の削減</span>
+          <span class="r-bd-val save" id="bd-comms">--時間/月</span>
+        </div>
+        <div class="r-bd-item" style="border-top:2px solid var(--border)">
+          <span class="r-bd-label" style="font-weight:500">1人あたり月間削減</span>
+          <span class="r-bd-val neutral" id="bd-per">--時間/人</span>
+        </div>
+      </div>
+
+      <div class="r-comment cp-comment" id="r-comment">入力内容に応じて試算結果が表示されます。</div>
+
+      <div class="r-cta">
+        <p class="r-cta-text">この試算と<strong>製品詳細資料・デモ案内</strong>を無料でお送りします</p>
+        <input class="inp" type="email" id="inp-email" placeholder="メールアドレス">
+        <input class="inp" type="text"  id="inp-org"   placeholder="法人名・施設名（任意）">
+        <button class="btn-send btn-send-cp" id="btn-send" onclick="sendLead()">資料を受け取る</button>
+        <div class="success" id="success">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="#2a7a50" stroke-width="1.5"/><path d="M5 8l2 2 4-4" stroke="#2a7a50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          送信完了。担当者よりご連絡します。
+        </div>
+        <p class="cta-note">※ 個人情報はND Softwareが適切に管理します</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script>
+let product = 'cp';   // 'cp' | 'cph'
+let typeFactor = 1.0;
+let typeName = '入居系施設';
+
+const CP_REDUCE  = { rec:0.65, paper:0.80, report:0.55 };
+const CPH_REDUCE = { rec:0.60, commute:0.85, tel:0.70 };
+
+const WORK_DAYS = 22;
+
+function g(id){ return document.getElementById(id); }
+
+function sv(id, val, fmt){
+  g('v-'+id).textContent = fmt(val);
+  const el = g('s-'+id);
+  const pct = (el.value - el.min) / (el.max - el.min) * 100;
+  const f = g('f-'+id);
+  if(f) f.style.width = pct + '%';
+}
+
+function switchProduct(p){
+  product = p;
+  const isCp = p === 'cp';
+
+  // tabs
+  g('tab-cp').className  = 'tab-btn' + (isCp ? ' active-cp' : '');
+  g('tab-cph').className = 'tab-btn' + (!isCp ? ' active-cph' : '');
+
+  // panels
+  ['cp-type','cp-extra','cp-feat'].forEach(id => {
+    g('panel-'+id).classList.toggle('show', isCp);
+  });
+  ['cph-type','cph-extra','cph-feat'].forEach(id => {
+    g('panel-'+id).classList.toggle('show', !isCp);
+  });
+
+  // result panel colors
+  const hdr = g('rp-header');
+  hdr.className = 'rp-header ' + (isCp ? 'rp-header-cp' : 'rp-header-cph');
+  g('rp-title').textContent = isCp ? 'Care Palette　導入効果試算' : 'Care Palette Home/Nurse　試算';
+  g('r-total').className   = 'r-num ' + (isCp ? 'cp-color' : 'cph-color');
+  g('bar-after').className = 'bar-fill ' + (isCp ? 'after-cp' : 'after-cph');
+  g('bd-header').className = 'r-bd-header ' + (isCp ? 'r-bd-header-cp' : 'r-bd-header-cph');
+  g('r-comment').className = 'r-comment ' + (isCp ? 'cp-comment' : 'cph-comment');
+  g('btn-send').className  = 'btn-send ' + (isCp ? 'btn-send-cp' : 'btn-send-cph');
+
+  // label changes
+  g('label-users').textContent   = isCp ? '利用者数' : '担当利用者数（訪問件数の目安）';
+  g('bd-extra-label').textContent = isCp ? '紙資料・移動時間の削減' : '帰社往復時間の削減';
+  g('bd-comms-label').textContent = isCp ? '情報共有・申し送り時間の削減' : '電話連絡・口頭報告時間の削減';
+
+  // slider fill colors
+  ['staff','users','rec','paper','report','commute','tel','wage'].forEach(id => {
+    const f = g('f-'+id); if(!f) return;
+    f.className = 'slider-fill' + (!isCp ? ' cph' : '');
+  });
+
+  // default type
+  if(isCp){
+    typeFactor = 1.1; typeName = '入居系施設';
+    document.querySelectorAll('#panel-cp-type .sel-btn').forEach((b,i) => {
+      b.className = 'sel-btn' + (i===0 ? ' sel-active-cp' : '');
+    });
+  } else {
+    typeFactor = 1.1; typeName = '訪問介護';
+    document.querySelectorAll('#panel-cph-type .sel-btn').forEach((b,i) => {
+      b.className = 'sel-btn' + (i===0 ? ' sel-active-cph' : '');
+    });
+  }
+
+  calc();
+}
+
+function selType(btn, type, factor, p){
+  const cls = p === 'cp' ? 'sel-active-cp' : 'sel-active-cph';
+  const panel = p === 'cp' ? '#panel-cp-type .sel-btn' : '#panel-cph-type .sel-btn';
+  document.querySelectorAll(panel).forEach(b => {
+    b.className = 'sel-btn';
+  });
+  btn.className = 'sel-btn ' + cls;
+  typeFactor = factor;
+  g('rp-sub').textContent = btn.querySelector('.sel-btn-title').textContent;
+  calc();
+}
+
+function calc(){
+  const staff    = +g('s-staff').value;
+  const recMin   = +g('s-rec').value;
+  const wage     = +g('s-wage').value;
+
+  if(product === 'cp'){
+    const paperMin  = +g('s-paper').value;
+    const reportMin = +g('s-report').value;
+
+    const recHrMonth    = recMin    / 60 * staff * WORK_DAYS * typeFactor;
+    const paperHrMonth  = paperMin  / 60 * staff * WORK_DAYS * typeFactor;
+    const reportHrMonth = reportMin / 60 * staff * WORK_DAYS * typeFactor;
+    const totalHr = recHrMonth + paperHrMonth + reportHrMonth;
+
+    const saveRec    = recHrMonth    * CP_REDUCE.rec;
+    const savePaper  = paperHrMonth  * CP_REDUCE.paper;
+    const saveReport = reportHrMonth * CP_REDUCE.report;
+    const saveTotal  = saveRec + savePaper + saveReport;
+    const saveCostYear = Math.round(saveTotal * wage * 12 / 10000);
+
+    g('r-total').textContent    = Math.round(totalHr);
+    g('r-save-hrs').textContent = Math.round(saveTotal);
+    g('r-save-cost').textContent = saveCostYear;
+
+    const afterHr = totalHr - saveTotal;
+    const afterPct = totalHr > 0 ? Math.max(Math.round(afterHr / totalHr * 100), 4) : 40;
+    g('bar-before-val').textContent = Math.round(totalHr) + ' 時間';
+    g('bar-after').style.width      = afterPct + '%';
+    g('bar-after-val').textContent  = Math.round(afterHr) + ' 時間';
+
+    g('bd-rec').textContent   = Math.round(saveRec)    + '時間/月';
+    g('bd-extra').textContent = Math.round(savePaper)  + '時間/月';
+    g('bd-comms').textContent = Math.round(saveReport) + '時間/月';
+    g('bd-per').textContent   = Math.round(saveTotal / staff * 10) / 10 + '時間/人';
+
+    const perPerson = Math.round(saveTotal / staff * 10) / 10;
+    let comment = '';
+    if(totalHr === 0){ comment = '入力内容に応じて試算結果が表示されます。'; }
+    else if(saveCostYear >= 30){
+      comment = `スタッフ1人あたり月<strong>${perPerson}時間</strong>の記録業務を削減。年間<strong>${saveCostYear}万円</strong>相当のコストが直接ケアの質向上に回せます。`;
+    } else {
+      comment = `月間<strong>${Math.round(saveTotal)}時間</strong>の削減効果が見込まれます。記録の転記ミスゼロ・ファイル持参不要で、現場の働き方が変わります。`;
+    }
+    g('r-comment').innerHTML = comment;
+
+  } else {
+    // Care Palette Home
+    const commuteMin = +g('s-commute').value;
+    const telMin     = +g('s-tel').value;
+
+    const recHrMonth      = recMin      / 60 * staff * WORK_DAYS * typeFactor;
+    const commuteHrMonth  = commuteMin  / 60 * staff * WORK_DAYS * typeFactor;
+    const telHrMonth      = telMin      / 60 * staff * WORK_DAYS * typeFactor;
+    const totalHr = recHrMonth + commuteHrMonth + telHrMonth;
+
+    const saveRec     = recHrMonth     * CPH_REDUCE.rec;
+    const saveCommute = commuteHrMonth * CPH_REDUCE.commute;
+    const saveTel     = telHrMonth     * CPH_REDUCE.tel;
+    const saveTotal   = saveRec + saveCommute + saveTel;
+    const saveCostYear = Math.round(saveTotal * wage * 12 / 10000);
+
+    g('r-total').textContent     = Math.round(totalHr);
+    g('r-save-hrs').textContent  = Math.round(saveTotal);
+    g('r-save-cost').textContent = saveCostYear;
+    g('rp-sub').textContent      = g('rp-sub').textContent || '訪問介護';
+
+    const afterHr = totalHr - saveTotal;
+    const afterPct = totalHr > 0 ? Math.max(Math.round(afterHr / totalHr * 100), 4) : 40;
+    g('bar-before-val').textContent = Math.round(totalHr) + ' 時間';
+    g('bar-after').style.width      = afterPct + '%';
+    g('bar-after-val').textContent  = Math.round(afterHr) + ' 時間';
+
+    g('bd-rec').textContent   = Math.round(saveRec)     + '時間/月';
+    g('bd-extra').textContent = Math.round(saveCommute) + '時間/月';
+    g('bd-comms').textContent = Math.round(saveTel)     + '時間/月';
+    g('bd-per').textContent   = Math.round(saveTotal / staff * 10) / 10 + '時間/人';
+
+    const commuteYearHr = Math.round(commuteHrMonth * CPH_REDUCE.commute * 12);
+    let comment = '';
+    if(totalHr === 0){ comment = '入力内容に応じて試算結果が表示されます。'; }
+    else if(saveCommute > 0){
+      comment = `直行直帰の実現で年間<strong>${commuteYearHr}時間</strong>の帰社往復時間を解消。電話連絡の削減も合わせ、年間<strong>${saveCostYear}万円</strong>相当のコスト削減が見込まれます。`;
+    } else {
+      comment = `訪問先での記録完結により月間<strong>${Math.round(saveTotal)}時間</strong>の業務削減が見込まれます。電子サイン・PUSH通知で情報共有もスムーズになります。`;
+    }
+    g('r-comment').innerHTML = comment;
+  }
+}
+
+function sendLead(){
+  const email = g('inp-email').value.trim();
+  if(!email || !email.includes('@')){
+    g('inp-email').style.borderColor = product === 'cp' ? 'var(--cp-accent)' : 'var(--cph-accent)';
+    setTimeout(() => g('inp-email').style.borderColor = '', 1200);
+    return;
+  }
+  g('success').classList.add('show');
+  ['inp-email','inp-org'].forEach(id => g(id).disabled = true);
+  const btn = g('btn-send');
+  btn.disabled = true; btn.style.opacity = '.4';
+}
+
+// init
+['staff','users','rec','paper','report','commute','tel','wage'].forEach(id => {
+  const el = g('s-'+id); if(!el) return;
+  const pct = (el.value - el.min) / (el.max - el.min) * 100;
+  const f = g('f-'+id); if(f) f.style.width = pct + '%';
+});
+calc();
+</script>
+</body>
+</html>

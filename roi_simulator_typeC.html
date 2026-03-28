@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ほのぼのVoice　現場診断・体験ページ</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=Zen+Kaku+Gothic+New:wght@700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#fdf0f8;
+  --surface:#ffffff;
+  --surface2:#f8e8f4;
+  --border:#f0c8e4;
+  --accent:#a8207a;
+  --accent2:#d060a8;
+  --accent-light:#fde8f5;
+  --green:#2a7a50;
+  --text:#2a0820;
+  --text2:#6a3858;
+  --text3:#b080a0;
+  --mono:'DM Mono',monospace;
+  --sans:'Noto Sans JP',sans-serif;
+  --display:'Zen Kaku Gothic New',sans-serif;
+  --r:10px;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh}
+body::before{content:'';position:fixed;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+
+.wrapper{max-width:900px;margin:0 auto;padding:52px 24px 80px}
+
+.header{margin-bottom:36px;animation:fadeUp .45s ease both}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;letter-spacing:.12em;color:var(--accent);text-transform:uppercase;margin-bottom:14px}
+.eyebrow::before{content:'';width:20px;height:1px;background:var(--accent)}
+h1{font-family:var(--display);font-size:clamp(22px,3.8vw,34px);font-weight:900;letter-spacing:-.02em;line-height:1.2}
+h1 em{font-style:normal;color:var(--accent)}
+.header-desc{margin-top:10px;font-size:13px;color:var(--text2);font-weight:300;line-height:1.8;max-width:560px}
+
+.prereq{display:inline-flex;align-items:center;gap:8px;background:var(--surface);border:1.5px solid var(--border);border-radius:7px;padding:8px 14px;margin-bottom:22px;font-size:12px;color:var(--text2);animation:fadeUp .45s .06s ease both}
+.prereq strong{color:var(--accent);font-weight:500}
+.back-link{display:block;margin-bottom:28px;font-size:12px;color:var(--text3);font-family:var(--mono);letter-spacing:.04em;cursor:pointer;transition:color .2s}
+.back-link:hover{color:var(--accent)}
+
+/* layout */
+.layout{display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start}
+@media(max-width:700px){.layout{grid-template-columns:1fr}}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:26px;margin-bottom:14px}
+.card-label{font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--text3);text-transform:uppercase;margin-bottom:14px}
+.card-title{font-family:var(--display);font-size:17px;font-weight:900;color:var(--text);margin-bottom:6px}
+.card-desc{font-size:13px;color:var(--text2);line-height:1.75;margin-bottom:16px;font-weight:300}
+
+/* checklist */
+.check-list{display:flex;flex-direction:column;gap:9px;margin-bottom:16px}
+.check-item{display:flex;align-items:center;gap:12px;background:var(--surface);border:1.5px solid var(--border);border-radius:8px;padding:12px 14px;cursor:pointer;transition:all .2s;user-select:none}
+.check-item:hover{border-color:var(--accent2);background:rgba(168,32,122,.03)}
+.check-item.checked{border-color:var(--accent);background:var(--accent-light)}
+.check-box{width:18px;height:18px;flex-shrink:0;border:1.5px solid var(--border);border-radius:4px;display:flex;align-items:center;justify-content:center;transition:all .2s;background:var(--surface)}
+.check-item.checked .check-box{background:var(--accent);border-color:var(--accent)}
+.check-icon{width:9px;height:9px;opacity:0;transition:opacity .2s}
+.check-item.checked .check-icon{opacity:1}
+.check-text{font-size:13px;color:var(--text);line-height:1.5}
+
+/* features */
+.feature-list{display:flex;flex-direction:column;gap:0}
+.feature-row{display:grid;grid-template-columns:32px 1fr;gap:12px;padding:14px 0;border-bottom:1px solid var(--border)}
+.feature-row:last-child{border-bottom:none}
+.feature-num{font-family:var(--mono);font-size:11px;color:var(--text3);letter-spacing:.06em;padding-top:2px}
+.feature-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;line-height:1.3}
+.feature-title em{font-style:normal;color:var(--accent)}
+.feature-desc{font-size:12px;color:var(--text2);line-height:1.7;font-weight:300}
+.feature-tag{display:inline-block;margin-top:6px;font-size:9px;font-family:var(--mono);letter-spacing:.08em;background:var(--accent-light);color:var(--accent);border:1px solid var(--border);padding:2px 7px;border-radius:3px}
+
+/* demo */
+.demo-card{background:#f0f0f0;border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.demo-header{background:var(--surface2);border-bottom:1px solid var(--border);padding:12px 18px;display:flex;align-items:center;justify-content:space-between}
+.demo-title{font-size:12px;font-weight:500;color:var(--text);letter-spacing:.04em}
+.demo-badge{font-size:10px;background:var(--accent);color:#fff;padding:2px 8px;border-radius:3px;letter-spacing:.06em;font-family:var(--mono)}
+
+/* LINE-style chat */
+.timeline{padding:16px 12px;display:flex;flex-direction:column;gap:12px;background:#f0f0f0}
+
+.tl-item{display:flex;align-items:flex-end;gap:8px;opacity:0;transform:translateY(8px);transition:all .4s ease}
+.tl-item.visible{opacity:1;transform:translateY(0)}
+
+/* スタッフ → 右寄せ */
+.tl-item.staff{flex-direction:row-reverse}
+
+/* アバター */
+.tl-avatar{
+  width:32px;height:32px;border-radius:50%;
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;font-family:var(--mono);
+  letter-spacing:.02em;
+}
+.tl-avatar.av-staff{background:var(--accent);color:#fff}
+.tl-avatar.av-voice{background:#1a5898;color:#fff}
+
+/* バブル本体 */
+.tl-content{display:flex;flex-direction:column;max-width:72%}
+.tl-item.staff .tl-content{align-items:flex-end}
+.tl-item.voice .tl-content{align-items:flex-start}
+
+.tl-name{font-size:10px;font-family:var(--mono);letter-spacing:.04em;margin-bottom:4px}
+.tl-item.staff .tl-name{color:var(--accent);text-align:right}
+.tl-item.voice .tl-name{color:#1a5898}
+
+.tl-bubble{
+  padding:9px 13px;font-size:12px;line-height:1.65;position:relative;word-break:break-all;
+}
+/* スタッフバブル：右、ピンク */
+.tl-item.staff .tl-bubble{
+  background:var(--accent);color:#fff;
+  border-radius:14px 2px 14px 14px;
+}
+/* Voiceバブル：左、青 */
+.tl-item.voice .tl-bubble{
+  background:#ffffff;color:#1a3060;
+  border:1px solid #c8d8f0;
+  border-radius:2px 14px 14px 14px;
+}
+/* 完了通知：中央グリーン */
+.tl-item.notify{justify-content:center}
+.tl-item.notify .tl-bubble{
+  background:rgba(42,122,80,.12);color:#1a6a3a;
+  border:1px solid rgba(42,122,80,.3);
+  border-radius:10px;font-size:11px;
+  display:flex;align-items:center;gap:6px;
+}
+
+.tl-time{font-size:10px;color:#a0a0a0;flex-shrink:0;margin-bottom:2px;font-family:var(--mono)}
+.tl-item.staff .tl-time{order:-1;margin-right:4px}
+.tl-item.voice .tl-time{margin-left:4px}
+
+.demo-footer{border-top:1px solid var(--border);padding:10px 18px;background:var(--surface2);font-size:12px;color:var(--text2);display:flex;align-items:center;gap:8px}
+.demo-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 2s infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* sticky right */
+.result-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;position:sticky;top:24px;animation:fadeUp .45s .08s ease both}
+.rp-header{background:var(--accent);color:#fff;padding:18px 22px}
+.rp-title{font-size:13px;font-weight:500;margin-bottom:2px}
+.rp-sub{font-size:11px;opacity:.7;font-family:var(--mono)}
+
+.r-metric{padding:16px 22px;border-bottom:1px solid var(--border)}
+.r-lbl{font-size:10px;font-family:var(--mono);color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px}
+.r-unit{font-size:11px;color:var(--text3)}
+
+/* score */
+.score-wrap{padding:16px 22px;border-bottom:1px solid var(--border)}
+.score-track{height:7px;background:var(--surface2);border-radius:4px;overflow:hidden;margin:10px 0 6px}
+.score-fill{height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent));border-radius:4px;width:0%;transition:width .5s cubic-bezier(.34,1.2,.64,1)}
+.score-labels{display:flex;justify-content:space-between;font-size:10px;font-family:var(--mono);color:var(--text3)}
+.score-big{font-family:var(--mono);font-size:28px;font-weight:500;color:var(--accent);transition:all .3s}
+
+.result-msg-panel{padding:14px 22px;border-bottom:1px solid var(--border);font-size:12px;line-height:1.75;color:var(--text2);min-height:60px}
+.result-msg-panel strong{color:var(--accent);font-weight:500}
+
+.r-comment{margin:14px 22px;padding:11px 13px;background:rgba(168,32,122,.07);border-left:3px solid var(--accent);border-radius:0 6px 6px 0;font-size:12px;color:var(--text2);line-height:1.75}
+.r-comment strong{color:var(--accent);font-weight:500}
+
+.r-cta{padding:16px 22px;border-top:1px solid var(--border);background:var(--surface2)}
+.r-cta-text{font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:10px}
+.r-cta-text strong{color:var(--text);font-weight:500}
+.inp{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:7px;font-family:var(--sans);font-size:13px;color:var(--text);padding:9px 12px;margin-bottom:8px;transition:border-color .2s}
+.inp:focus{outline:none;border-color:var(--accent)}
+.inp::placeholder{color:var(--text3)}
+.btn-send{width:100%;background:var(--accent);color:#fff;border:none;border-radius:7px;font-family:var(--sans);font-size:13px;font-weight:700;padding:11px;cursor:pointer;transition:opacity .2s}
+.btn-send:hover{opacity:.85}
+.success{display:none;align-items:center;gap:6px;background:rgba(42,122,80,.1);border:1px solid rgba(42,122,80,.3);border-radius:7px;padding:10px 12px;font-size:12px;color:var(--green)}
+.success.show{display:flex}
+.cta-note{font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:8px}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <div class="header">
+    <div class="eyebrow">ほのぼのNEXTユーザー向け　TYPE C</div>
+    <h1>記録に、<em>声</em>を使う。<br>現場を診断して効果を確認。</h1>
+    <p class="header-desc">ほのぼのVoiceはほのぼのNEXTとの連携専用ツールです。現場の記録課題をチェックし、音声記録でどう変わるかをご確認ください。</p>
+  </div>
+  <div class="prereq">利用には <strong>ほのぼのNEXT</strong> の導入が必要です（追加導入だけで即日から使えます）</div>
+  <span class="back-link" onclick="history.back()">← トップに戻る</span>
+
+  <div class="layout">
+    <!-- LEFT -->
+    <div>
+
+      <!-- 課題チェック -->
+      <div class="card" style="animation:fadeUp .4s ease both">
+        <div class="card-label">現場診断</div>
+        <div class="card-title">貴施設に当てはまるものは？</div>
+        <div class="card-desc">記録業務に関する課題をチェックしてください。右のスコアに診断結果が表示されます。</div>
+        <div class="check-list">
+          <div class="check-item" onclick="toggle(this)">
+            <div class="check-box"><svg class="check-icon" viewBox="0 0 9 9" fill="none"><path d="M1.5 4.5l2 2 4-4" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="check-text">記録はケアが終わってから、まとめて入力することが多い</div>
+          </div>
+          <div class="check-item" onclick="toggle(this)">
+            <div class="check-box"><svg class="check-icon" viewBox="0 0 9 9" fill="none"><path d="M1.5 4.5l2 2 4-4" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="check-text">記録のためにステーションや事務室に戻る時間が発生している</div>
+          </div>
+          <div class="check-item" onclick="toggle(this)">
+            <div class="check-box"><svg class="check-icon" viewBox="0 0 9 9" fill="none"><path d="M1.5 4.5l2 2 4-4" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="check-text">過去の記録を口頭で確認することが多い</div>
+          </div>
+          <div class="check-item" onclick="toggle(this)">
+            <div class="check-box"><svg class="check-icon" viewBox="0 0 9 9" fill="none"><path d="M1.5 4.5l2 2 4-4" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="check-text">介助しながらメモを取るのが難しく、記録の抜け漏れが起きる</div>
+          </div>
+          <div class="check-item" onclick="toggle(this)">
+            <div class="check-box"><svg class="check-icon" viewBox="0 0 9 9" fill="none"><path d="M1.5 4.5l2 2 4-4" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="check-text">スタッフ間の情報共有が遅く、伝達ミスが起きることがある</div>
+          </div>
+          <div class="check-item" onclick="toggle(this)">
+            <div class="check-box"><svg class="check-icon" viewBox="0 0 9 9" fill="none"><path d="M1.5 4.5l2 2 4-4" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="check-text">残業の主な理由が記録業務になっているスタッフがいる</div>
+          </div>
+          <div class="check-item" onclick="toggle(this)">
+            <div class="check-box"><svg class="check-icon" viewBox="0 0 9 9" fill="none"><path d="M1.5 4.5l2 2 4-4" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="check-text">新人スタッフが記録の書き方に慣れるまで時間がかかっている</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 特長 -->
+      <div class="card" style="animation:fadeUp .4s .06s ease both">
+        <div class="card-label">ほのぼのVoiceの特長</div>
+        <div class="feature-list">
+          <div class="feature-row">
+            <div class="feature-num">01</div>
+            <div class="feature-body">
+              <div class="feature-title">その場で話すだけで<em>記録完了</em></div>
+              <div class="feature-desc">「OK ほのぼの、田中さん、食事量、主食8割、副食全量」——これだけで記録が入ります。ベッドサイドでも廊下でも両手がふさがっていても。記録のために戻る必要がなくなります。</div>
+              <div class="feature-tag">AI音声認識　介護用語特化</div>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feature-num">02</div>
+            <div class="feature-body">
+              <div class="feature-title"><em>反復確認</em>でヒューマンエラーを防ぐ</div>
+              <div class="feature-desc">入力内容をAIが読み上げて確認。同姓同名の利用者も自動検知。「送信しますか？」に答えるまで記録されないので誤記録を事前に防げます。</div>
+              <div class="feature-tag">誤記録防止　安心設計</div>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feature-num">03</div>
+            <div class="feature-body">
+              <div class="feature-title">過去の記録を<em>声で呼び出す</em></div>
+              <div class="feature-desc">「OK ほのぼの、特変のあった方は？」——ほのぼのNEXTに蓄積されたデータを、検索操作なしで取り出せます。</div>
+              <div class="feature-tag">ほのぼのNEXT連携　データ活用</div>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feature-num">04</div>
+            <div class="feature-body">
+              <div class="feature-title">外部AIを使わない<em>安心のセキュリティ</em></div>
+              <div class="feature-desc">介護記録は個人情報の塊です。ほのぼのVoiceは安全性が担保されるまで外部生成AIを使わない方針を徹底。学習データへの流用リスクを排除しています。</div>
+              <div class="feature-tag">セキュリティ最優先</div>
+            </div>
+          </div>
+          <div class="feature-row">
+            <div class="feature-num">05</div>
+            <div class="feature-body">
+              <div class="feature-title">インカムオプションで<em>チーム連携</em>も一台で</div>
+              <div class="feature-desc">ヘッドセット装着でハンズフリー通話にも対応。緊急時の割り込み個別通話、会話履歴の音声再生機能も搭載。介護業界最安水準のコストで導入できます（2026年2月時点）。</div>
+              <div class="feature-tag">インカムオプション　業界最安水準</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 音声デモ -->
+      <div class="card" style="animation:fadeUp .4s .10s ease both">
+        <div class="card-label">使用イメージ</div>
+        <div class="card-title">現場での1シーンを体感してください</div>
+        <div class="card-desc">バイタル測定後、その場で声だけで記録。これがほのぼのVoiceで変わる現場です。</div>
+        <div class="demo-card">
+          <div class="demo-header">
+            <span class="demo-title">バイタル記録＆状態確認　シミュレーション</span>
+            <span class="demo-badge">VOICE DEMO</span>
+          </div>
+          <div class="timeline" id="timeline">
+
+            <!-- スタッフ → 右 -->
+            <div class="tl-item staff">
+              <div class="tl-avatar av-staff">S</div>
+              <div class="tl-content">
+                <div class="tl-name">スタッフ（音声）</div>
+                <div class="tl-bubble">OKほのぼの　山田花子さんのバイタル、体温36.2度、血圧128の76、脈拍56、呼吸数16、SPO2 98</div>
+              </div>
+              <div class="tl-time">10:14</div>
+            </div>
+
+            <!-- Voice → 左 -->
+            <div class="tl-item voice">
+              <div class="tl-avatar av-voice">V</div>
+              <div class="tl-content">
+                <div class="tl-name">ほのぼのVoice</div>
+                <div class="tl-bubble">山田花子さんの本日10:14のバイタル、体温36.2度、血圧128の76、脈拍56、呼吸数16、SPO2 98でほのぼのNEXTに送信しますか？</div>
+              </div>
+              <div class="tl-time"></div>
+            </div>
+
+            <!-- スタッフ → 右 -->
+            <div class="tl-item staff">
+              <div class="tl-avatar av-staff">S</div>
+              <div class="tl-content">
+                <div class="tl-name">スタッフ（音声）</div>
+                <div class="tl-bubble">はい</div>
+              </div>
+              <div class="tl-time">10:14</div>
+            </div>
+
+            <!-- 完了通知 → 中央 -->
+            <div class="tl-item notify">
+              <div class="tl-bubble">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="#2a7a50" stroke-width="1.2"/><path d="M3.5 6l1.8 1.8 3.2-3.6" stroke="#2a7a50" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                ほのぼのNEXTに登録しました
+              </div>
+            </div>
+
+            <!-- スタッフ → 右 -->
+            <div class="tl-item staff">
+              <div class="tl-avatar av-staff">S</div>
+              <div class="tl-content">
+                <div class="tl-name">スタッフ（音声）</div>
+                <div class="tl-bubble">OKほのぼの　特変の入居者教えて</div>
+              </div>
+              <div class="tl-time">10:31</div>
+            </div>
+
+            <!-- Voice → 左 -->
+            <div class="tl-item voice">
+              <div class="tl-avatar av-voice">V</div>
+              <div class="tl-content">
+                <div class="tl-name">ほのぼのVoice</div>
+                <div class="tl-bubble">特変の入居者は、山田花子さん、佐藤健二さん、福田としさん、です。</div>
+              </div>
+              <div class="tl-time"></div>
+            </div>
+
+          </div>
+          <div class="demo-footer">
+            <div class="demo-dot"></div>
+            ほのぼのNEXTに蓄積されたデータを、声で即座に呼び出せます
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: sticky -->
+    <div class="result-panel">
+      <div class="rp-header">
+        <div class="rp-title">ほのぼのVoice　現場診断</div>
+        <div class="rp-sub">ほのぼのNEXTユーザー専用</div>
+      </div>
+
+      <div class="score-wrap">
+        <div class="r-lbl">課題スコア</div>
+        <div class="score-big" id="score-big">0 <span style="font-size:14px;color:var(--text3)">/ 7</span></div>
+        <div class="score-track"><div class="score-fill" id="score-fill"></div></div>
+        <div class="score-labels"><span>課題なし</span><span>要対応</span></div>
+      </div>
+
+      <div class="result-msg-panel" id="result-msg">チェックリストで現場の課題を選択してください。</div>
+
+      <div class="r-comment" id="r-hint">課題が多いほど、ほのぼのVoice導入の効果が大きくなります。</div>
+
+      <div class="r-cta">
+        <p class="r-cta-text">診断結果と<strong>デモ・詳細資料</strong>を無料でお送りします</p>
+        <input class="inp" type="email" id="inp-email" placeholder="メールアドレス">
+        <input class="inp" type="text"  id="inp-org"   placeholder="法人名・施設名（任意）">
+        <button class="btn-send" onclick="sendLead()">デモ・資料を受け取る</button>
+        <div class="success" id="success">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="#2a7a50" stroke-width="1.5"/><path d="M5 8l2 2 4-4" stroke="#2a7a50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          送信完了。担当者よりご連絡します。
+        </div>
+        <p class="cta-note">※ 個人情報はND Softwareが適切に管理します</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script>
+function g(id){return document.getElementById(id)}
+
+function toggle(el){
+  el.classList.toggle('checked');
+  const checked=document.querySelectorAll('.check-item.checked').length;
+  const total=document.querySelectorAll('.check-item').length;
+  const pct=checked/total*100;
+
+  g('score-big').innerHTML=checked+' <span style="font-size:14px;color:var(--text3)">/ '+total+'</span>';
+  g('score-fill').style.width=pct+'%';
+
+  let msg='',hint='';
+  if(checked===0){
+    msg='チェックリストで現場の課題を選択してください。';
+    hint='課題が多いほど、ほのぼのVoice導入の効果が大きくなります。';
+  } else if(checked<=2){
+    msg='現状の記録業務は比較的スムーズに運用できているようです。ほのぼのVoiceは追加導入だけで使えるため、さらなる効率化の選択肢として検討いただけます。';
+    hint='<strong>'+checked+'項目</strong>の課題が確認されました。導入後すぐに効果を感じられます。';
+  } else if(checked<=4){
+    msg='記録業務に課題が生じ始めています。<strong>今のうちに手を打つことで、スタッフの負担増加と記録品質の低下を防げます。</strong>ほのぼのVoiceは現場の動線を変えずに導入できます。';
+    hint='<strong>'+checked+'項目</strong>の課題があります。音声記録への移行で<strong>記録時間を最大65%削減</strong>できる可能性があります。';
+  } else {
+    msg='記録業務の課題が現場に積み重なっています。<strong>ほのぼのNEXTのデータを活かしながら音声でリアルタイム記録に移行することで、残業削減・記録品質向上・スタッフ定着に直結します。</strong>NEXTユーザー様なら追加設定だけで始められます。';
+    hint='<strong>'+checked+'項目</strong>の深刻な課題があります。早期導入を強くお勧めします。ブースでデモを体験できます。';
+  }
+  g('result-msg').innerHTML=msg;
+  g('r-hint').innerHTML=hint;
+}
+
+// timeline
+const observer=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      e.target.querySelectorAll('.tl-item').forEach((item,i)=>{
+        setTimeout(()=>item.classList.add('visible'),i*220);
+      });
+      observer.unobserve(e.target);
+    }
+  });
+},{threshold:0.2});
+const tl=document.getElementById('timeline');
+if(tl) observer.observe(tl);
+
+function sendLead(){
+  const email=g('inp-email').value.trim();
+  if(!email||!email.includes('@')){
+    g('inp-email').style.borderColor='var(--accent)';
+    setTimeout(()=>g('inp-email').style.borderColor='',1200);
+    return;
+  }
+  g('success').classList.add('show');
+  ['inp-email','inp-org'].forEach(id=>g(id).disabled=true);
+  const btn=document.querySelector('.btn-send');
+  btn.disabled=true;btn.style.opacity='.4';
+}
+</script>
+</body>
+</html>

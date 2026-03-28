@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ほのぼのNEXT　ROIシミュレーター</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f4f7ff;
+  --surface:#ffffff;
+  --surface2:#edf1fb;
+  --border:#d8e0f5;
+  --accent:#2f6fc8;
+  --accent-dark:#1a4fa0;
+  --green:#2a8a5a;
+  --warn:#d4860a;
+  --text:#181c2e;
+  --text2:#4a5272;
+  --text3:#8a90b0;
+  --mono:'DM Mono',monospace;
+  --sans:'Noto Sans JP',sans-serif;
+  --r:10px;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh}
+body::before{content:'';position:fixed;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--accent),#5b9ef5)}
+
+.wrapper{max-width:860px;margin:0 auto;padding:52px 24px 80px}
+
+.header{margin-bottom:40px;animation:fadeUp .45s ease both}
+.product-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--accent);color:#fff;
+  font-size:12px;font-weight:700;letter-spacing:.04em;
+  padding:5px 14px;border-radius:4px;margin-bottom:14px;
+}
+.product-badge-sub{font-weight:400;opacity:.8;font-size:11px}
+h1{font-size:clamp(20px,3.5vw,30px);font-weight:700;letter-spacing:-.02em;line-height:1.3}
+h1 em{font-style:normal;color:var(--accent)}
+.header-desc{margin-top:10px;font-size:13px;color:var(--text2);line-height:1.7;font-weight:300}
+
+.back-link{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:12px;color:var(--text3);text-decoration:none;
+  font-family:var(--mono);letter-spacing:.04em;margin-bottom:28px;
+  transition:color .2s;cursor:pointer;
+}
+.back-link:hover{color:var(--accent)}
+
+/* layout */
+.layout{display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start}
+@media(max-width:680px){.layout{grid-template-columns:1fr}}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:28px;margin-bottom:16px}
+.card-label{font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--text3);text-transform:uppercase;margin-bottom:18px}
+
+.slider-field{margin-bottom:22px}
+.slider-field:last-child{margin-bottom:0}
+.slider-label{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.slider-label-text{font-size:13px;color:var(--text2)}
+.slider-val{font-family:var(--mono);font-size:15px;font-weight:500;color:var(--text)}
+.slider-wrap{position:relative;height:20px;display:flex;align-items:center}
+input[type=range]{-webkit-appearance:none;width:100%;height:4px;background:var(--border);border-radius:2px;outline:none;cursor:pointer;position:relative;z-index:1}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;background:var(--surface);border:2px solid var(--accent);border-radius:50%;cursor:pointer;transition:transform .15s}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2)}
+.slider-fill{position:absolute;left:0;top:50%;height:4px;background:var(--accent);border-radius:2px;pointer-events:none;transform:translateY(-50%);z-index:0}
+
+/* sticky result panel */
+.result-panel{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  overflow:hidden;
+  position:sticky;
+  top:24px;
+  animation:fadeUp .45s .1s ease both;
+}
+.result-panel-header{
+  background:var(--accent);
+  color:#fff;
+  padding:18px 22px;
+}
+.result-panel-title{font-size:13px;font-weight:500;margin-bottom:2px}
+.result-panel-sub{font-size:11px;opacity:.7;font-family:var(--mono)}
+
+.r-metric{
+  padding:18px 22px;
+  border-bottom:1px solid var(--border);
+  display:flex;flex-direction:column;gap:4px;
+}
+.r-metric:last-of-type{border-bottom:none}
+.r-lbl{font-size:10px;font-family:var(--mono);color:var(--text3);letter-spacing:.08em;text-transform:uppercase}
+.r-num{
+  font-family:var(--mono);
+  font-size:clamp(22px,3vw,28px);
+  font-weight:500;
+  color:var(--accent);
+  transition:all .3s cubic-bezier(.34,1.56,.64,1);
+}
+.r-num.green{color:var(--green)}
+.r-num.warn{color:var(--warn)}
+.r-unit{font-size:11px;color:var(--text3)}
+
+/* highlight bar */
+.highlight-bar{
+  margin:0 22px 18px;
+  background:var(--surface2);
+  border-radius:8px;
+  padding:14px;
+}
+.hb-label{font-size:11px;color:var(--text3);margin-bottom:8px;font-family:var(--mono);letter-spacing:.06em}
+.hb-track{height:8px;background:var(--border);border-radius:4px;overflow:hidden;margin-bottom:6px}
+.hb-fill{height:100%;background:linear-gradient(90deg,var(--accent),#5b9ef5);border-radius:4px;transition:width .5s cubic-bezier(.34,1.2,.64,1)}
+.hb-labels{display:flex;justify-content:space-between;font-size:10px;font-family:var(--mono);color:var(--text3)}
+
+/* comment */
+.result-comment{
+  margin:0 22px 18px;
+  padding:12px 14px;
+  background:rgba(47,111,200,.07);
+  border-left:3px solid var(--accent);
+  border-radius:0 6px 6px 0;
+  font-size:12px;
+  color:var(--text2);
+  line-height:1.7;
+}
+.result-comment strong{color:var(--accent);font-weight:500}
+
+/* CTA */
+.cta-area{padding:18px 22px;border-top:1px solid var(--border);background:var(--surface2)}
+.cta-text{font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:12px}
+.cta-text strong{color:var(--text);font-weight:500}
+.inp{
+  width:100%;background:var(--surface);border:1px solid var(--border);
+  border-radius:7px;font-family:var(--sans);font-size:13px;color:var(--text);
+  padding:9px 12px;margin-bottom:8px;transition:border-color .2s;
+}
+.inp:focus{outline:none;border-color:var(--accent)}
+.inp::placeholder{color:var(--text3)}
+.btn-send{
+  width:100%;background:var(--accent);color:#fff;border:none;border-radius:7px;
+  font-family:var(--sans);font-size:13px;font-weight:700;padding:11px;
+  cursor:pointer;transition:opacity .2s;
+}
+.btn-send:hover{opacity:.85}
+.success{
+  display:none;align-items:center;gap:6px;
+  background:rgba(42,138,90,.1);border:1px solid rgba(42,138,90,.3);
+  border-radius:7px;padding:10px 12px;font-size:12px;color:var(--green);
+}
+.success.show{display:flex}
+.cta-note{font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:8px}
+
+/* feature list */
+.feature-list{list-style:none;display:flex;flex-direction:column;gap:10px}
+.feature-item{
+  display:flex;align-items:flex-start;gap:10px;
+  font-size:13px;color:var(--text2);line-height:1.6;
+}
+.feature-dot{
+  width:6px;height:6px;border-radius:50%;
+  background:var(--accent);flex-shrink:0;margin-top:6px;
+}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <div class="header">
+    <div class="product-badge">ほのぼのNEXT <span class="product-badge-sub">介護記録・業務支援システム</span></div>
+    <h1>記録業務を<em>最大65%削減</em>。<br>現場の時間を、ケアに取り戻す。</h1>
+    <p class="header-desc">貴施設の規模・現状をご入力いただくと、ほのぼのNEXT導入による業務改善効果を試算します。</p>
+  </div>
+
+  <span class="back-link" onclick="history.back()">← 業務負担診断に戻る</span>
+
+  <div class="layout">
+    <!-- LEFT: inputs -->
+    <div>
+      <div class="card" style="animation:fadeUp .4s ease both">
+        <div class="card-label">施設規模</div>
+        <div class="slider-field">
+          <div class="slider-label">
+            <span class="slider-label-text">介護職員数</span>
+            <span class="slider-val" id="v-staff">20名</span>
+          </div>
+          <div class="slider-wrap">
+            <div class="slider-fill" id="f-staff"></div>
+            <input type="range" id="s-staff" min="3" max="200" value="20" step="1" oninput="sv('staff',this.value,v=>v+'名');calc()">
+          </div>
+        </div>
+        <div class="slider-field">
+          <div class="slider-label">
+            <span class="slider-label-text">月間シフト勤務日数（1人あたり）</span>
+            <span class="slider-val" id="v-days">20日</span>
+          </div>
+          <div class="slider-wrap">
+            <div class="slider-fill" id="f-days"></div>
+            <input type="range" id="s-days" min="10" max="26" value="20" step="1" oninput="sv('days',this.value,v=>v+'日');calc()">
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="animation:fadeUp .4s .06s ease both">
+        <div class="card-label">現在の記録業務（1人・1日あたり）</div>
+        <div class="slider-field">
+          <div class="slider-label">
+            <span class="slider-label-text">介護記録の手書き・入力時間</span>
+            <span class="slider-val" id="v-rec">50分</span>
+          </div>
+          <div class="slider-wrap">
+            <div class="slider-fill" id="f-rec"></div>
+            <input type="range" id="s-rec" min="10" max="150" value="50" step="5" oninput="sv('rec',this.value,v=>v+'分');calc()">
+          </div>
+        </div>
+        <div class="slider-field">
+          <div class="slider-label">
+            <span class="slider-label-text">申し送り・情報共有にかかる時間</span>
+            <span class="slider-val" id="v-report">20分</span>
+          </div>
+          <div class="slider-wrap">
+            <div class="slider-fill" id="f-report"></div>
+            <input type="range" id="s-report" min="5" max="60" value="20" step="5" oninput="sv('report',this.value,v=>v+'分');calc()">
+          </div>
+        </div>
+        <div class="slider-field">
+          <div class="slider-label">
+            <span class="slider-label-text">職員の平均時給</span>
+            <span class="slider-val" id="v-wage">1,500円</span>
+          </div>
+          <div class="slider-wrap">
+            <div class="slider-fill" id="f-wage"></div>
+            <input type="range" id="s-wage" min="1000" max="3000" value="1500" step="100" oninput="sv('wage',this.value,v=>Number(v).toLocaleString()+'円');calc()">
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="animation:fadeUp .4s .12s ease both">
+        <div class="card-label">月次書類業務（事業所全体）</div>
+        <div class="slider-field">
+          <div class="slider-label">
+            <span class="slider-label-text">計画書・モニタリング書類の作成時間</span>
+            <span class="slider-val" id="v-doc">20時間</span>
+          </div>
+          <div class="slider-wrap">
+            <div class="slider-fill" id="f-doc"></div>
+            <input type="range" id="s-doc" min="2" max="80" value="20" step="1" oninput="sv('doc',this.value,v=>v+'時間');calc()">
+          </div>
+        </div>
+        <div class="slider-field">
+          <div class="slider-label">
+            <span class="slider-label-text">記録の転記・修正・確認作業</span>
+            <span class="slider-val" id="v-fix">10時間</span>
+          </div>
+          <div class="slider-wrap">
+            <div class="slider-fill" id="f-fix"></div>
+            <input type="range" id="s-fix" min="1" max="60" value="10" step="1" oninput="sv('fix',this.value,v=>v+'時間');calc()">
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="animation:fadeUp .4s .18s ease both">
+        <div class="card-label">ほのぼのNEXTの主な改善ポイント</div>
+        <ul class="feature-list">
+          <li class="feature-item"><span class="feature-dot"></span>音声入力・定型文でリアルタイム記録。入力時間を最大65%削減</li>
+          <li class="feature-item"><span class="feature-dot"></span>記録データから申し送り・報告書を自動生成。転記ゼロへ</li>
+          <li class="feature-item"><span class="feature-dot"></span>多職種でリアルタイム情報共有。朝の申し送り時間を短縮</li>
+          <li class="feature-item"><span class="feature-dot"></span>計画書・モニタリング書類をシステム内で一元管理</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- RIGHT: sticky result -->
+    <div class="result-panel">
+      <div class="result-panel-header">
+        <div class="result-panel-title">ほのぼのNEXT　導入効果試算</div>
+        <div class="result-panel-sub">入力値に基づくリアルタイム算出</div>
+      </div>
+
+      <div class="r-metric">
+        <div class="r-lbl">月間削減時間（全職員）</div>
+        <div class="r-num" id="r-hrs">--</div>
+        <div class="r-unit">時間 / 月</div>
+      </div>
+      <div class="r-metric">
+        <div class="r-lbl">年間削減コスト換算</div>
+        <div class="r-num green" id="r-cost">--</div>
+        <div class="r-unit">万円 / 年</div>
+      </div>
+      <div class="r-metric" style="border-bottom:1px solid var(--border)">
+        <div class="r-lbl">職員1人あたり削減（月）</div>
+        <div class="r-num warn" id="r-per">--</div>
+        <div class="r-unit">時間 / 月・人</div>
+      </div>
+
+      <div class="highlight-bar" style="margin-top:18px">
+        <div class="hb-label">記録業務の削減率</div>
+        <div class="hb-track"><div class="hb-fill" id="hb-fill" style="width:0%"></div></div>
+        <div class="hb-labels"><span>現状</span><span id="hb-pct">--%</span></div>
+      </div>
+
+      <div class="result-comment" id="result-comment">入力内容に応じて試算結果が表示されます。</div>
+
+      <div class="cta-area">
+        <p class="cta-text">この試算と<strong>詳細提案資料</strong>を無料でお送りします</p>
+        <input class="inp" type="email" id="inp-email" placeholder="メールアドレス">
+        <input class="inp" type="text"  id="inp-org"   placeholder="法人名・施設名（任意）">
+        <button class="btn-send" onclick="sendLead()">資料を受け取る</button>
+        <div class="success" id="success">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="#2a8a5a" stroke-width="1.5"/><path d="M5 8l2 2 4-4" stroke="#2a8a5a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          送信完了。担当者よりご連絡します。
+        </div>
+        <p class="cta-note">※ 個人情報はND Softwareが適切に管理します</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script>
+function g(id){return document.getElementById(id)}
+function sv(id,val,fmt){
+  g('v-'+id).textContent=fmt(val);
+  const el=g('s-'+id);
+  const pct=(val-el.min)/(el.max-el.min)*100;
+  g('f-'+id).style.width=pct+'%';
+}
+const REC_REDUCE=0.65, REPORT_REDUCE=0.50, DOC_REDUCE=0.55, FIX_REDUCE=0.70;
+function calc(){
+  const staff=+g('s-staff').value, days=+g('s-days').value;
+  const recMin=+g('s-rec').value, reportMin=+g('s-report').value;
+  const docHr=+g('s-doc').value, fixHr=+g('s-fix').value;
+  const wage=+g('s-wage').value;
+
+  const recHrMonth   = recMin/60*staff*days;
+  const reportHrMonth= reportMin/60*staff*days;
+
+  const saveRec   = recHrMonth   * REC_REDUCE;
+  const saveReport= reportHrMonth* REPORT_REDUCE;
+  const saveDoc   = docHr        * DOC_REDUCE;
+  const saveFix   = fixHr        * FIX_REDUCE;
+  const saveTotal = saveRec+saveReport+saveDoc+saveFix;
+  const totalBefore=recHrMonth+reportHrMonth+docHr+fixHr;
+  const reducePct=Math.round(saveTotal/totalBefore*100);
+
+  g('r-hrs').textContent  = Math.round(saveTotal);
+  g('r-cost').textContent = Math.round(saveTotal*wage*12/10000);
+  g('r-per').textContent  = Math.round(saveTotal/staff*10)/10;
+  g('hb-fill').style.width= Math.min(reducePct,100)+'%';
+  g('hb-pct').textContent = reducePct+'%削減';
+
+  const perPerson=Math.round(saveTotal/staff*10)/10;
+  g('result-comment').innerHTML=
+    `職員1人あたり月<strong>${perPerson}時間</strong>の記録業務を削減。`+
+    `年間換算で<strong>${Math.round(saveTotal*wage*12/10000)}万円</strong>相当のコストを直接ケアサービスに還元できます。`;
+}
+function sendLead(){
+  const email=g('inp-email').value.trim();
+  if(!email||!email.includes('@')){g('inp-email').style.borderColor='var(--accent)';setTimeout(()=>g('inp-email').style.borderColor='',1200);return;}
+  g('success').classList.add('show');
+  ['inp-email','inp-org'].forEach(id=>g(id).disabled=true);
+  document.querySelector('.btn-send').disabled=true;
+  document.querySelector('.btn-send').style.opacity='.4';
+}
+['staff','days','rec','report','wage','doc','fix'].forEach(id=>{
+  const el=g('s-'+id);if(!el)return;
+  const pct=(el.value-el.min)/(el.max-el.min)*100;
+  const f=g('f-'+id);if(f)f.style.width=pct+'%';
+});
+calc();
+</script>
+</body>
+</html>

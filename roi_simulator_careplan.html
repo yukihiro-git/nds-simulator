@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ケアプランデータ連携　効果試算シミュレーター</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=Zen+Kaku+Gothic+New:wght@700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f0f7f4;
+  --surface:#ffffff;
+  --surface2:#e4f0eb;
+  --border:#c8dfd5;
+  --accent:#0f6e4a;
+  --accent2:#18a06a;
+  --accent3:#e8f5f0;
+  --gold:#c8860a;
+  --gold-bg:#fdf6e3;
+  --gold-border:#f0d080;
+  --text:#0e1e18;
+  --text2:#3a5248;
+  --text3:#7a9a8a;
+  --red:#c84b2f;
+  --mono:'DM Mono',monospace;
+  --sans:'Noto Sans JP',sans-serif;
+  --display:'Zen Kaku Gothic New',sans-serif;
+  --r:10px;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh}
+body::before{content:'';position:fixed;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+
+.wrapper{max-width:900px;margin:0 auto;padding:52px 24px 80px}
+
+/* header */
+.header{margin-bottom:44px;animation:fadeUp .45s ease both}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-family:var(--mono);letter-spacing:.12em;color:var(--accent);text-transform:uppercase;margin-bottom:14px}
+.eyebrow::before{content:'';width:20px;height:1px;background:var(--accent)}
+h1{font-family:var(--display);font-size:clamp(22px,3.8vw,36px);font-weight:900;letter-spacing:-.02em;line-height:1.2;margin-bottom:10px}
+h1 em{font-style:normal;color:var(--accent)}
+.header-desc{font-size:13px;color:var(--text2);line-height:1.8;font-weight:300;max-width:580px}
+
+/* campaign banner */
+.campaign{
+  background:var(--gold-bg);
+  border:1.5px solid var(--gold-border);
+  border-radius:var(--r);
+  padding:16px 20px;
+  margin-bottom:32px;
+  display:flex;align-items:flex-start;gap:14px;
+  animation:fadeUp .45s .06s ease both;
+}
+.campaign-icon{
+  width:36px;height:36px;flex-shrink:0;
+  background:var(--gold);border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+}
+.campaign-body{}
+.campaign-title{font-size:13px;font-weight:700;color:var(--gold);margin-bottom:4px}
+.campaign-text{font-size:12px;color:#7a5a00;line-height:1.7}
+.campaign-text strong{font-weight:700;font-size:14px}
+
+/* back link */
+.back-link{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--text3);font-family:var(--mono);letter-spacing:.04em;margin-bottom:28px;cursor:pointer;transition:color .2s}
+.back-link:hover{color:var(--accent)}
+
+/* layout */
+.layout{display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start}
+@media(max-width:700px){.layout{grid-template-columns:1fr}}
+
+/* card */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:28px;margin-bottom:16px}
+.card-label{font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--text3);text-transform:uppercase;margin-bottom:18px}
+
+/* role selector */
+.role-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:0}
+.role-btn{
+  border:1.5px solid var(--border);border-radius:8px;
+  padding:14px 16px;cursor:pointer;background:var(--surface);
+  text-align:left;transition:all .2s;font-family:var(--sans);
+}
+.role-btn:hover{border-color:var(--accent2)}
+.role-btn.selected{border-color:var(--accent);background:rgba(15,110,74,.05)}
+.role-btn-title{font-size:13px;font-weight:500;color:var(--text);margin-bottom:2px}
+.role-btn-sub{font-size:11px;color:var(--text3)}
+
+/* slider */
+.slider-field{margin-bottom:22px}
+.slider-field:last-child{margin-bottom:0}
+.slider-label{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.slider-label-text{font-size:13px;color:var(--text2);line-height:1.4}
+.slider-val{font-family:var(--mono);font-size:15px;font-weight:500;color:var(--text);flex-shrink:0;margin-left:8px}
+input[type=range]{-webkit-appearance:none;width:100%;height:4px;background:var(--border);border-radius:2px;outline:none;cursor:pointer;position:relative;z-index:1}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;background:var(--surface);border:2px solid var(--accent);border-radius:50%;cursor:pointer;transition:transform .15s}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2)}
+.slider-wrap{position:relative;height:20px;display:flex;align-items:center}
+.slider-fill{position:absolute;left:0;top:50%;height:4px;background:var(--accent);border-radius:2px;pointer-events:none;transform:translateY(-50%);z-index:0}
+
+/* info box */
+.info-box{
+  background:var(--accent3);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:12px 14px;
+  font-size:12px;color:var(--text2);line-height:1.7;
+  margin-top:16px;
+}
+.info-box strong{color:var(--accent);font-weight:500}
+
+/* sticky result */
+.result-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;position:sticky;top:24px;animation:fadeUp .45s .1s ease both}
+.rp-header{background:var(--accent);color:#fff;padding:18px 22px}
+.rp-title{font-size:13px;font-weight:500;margin-bottom:2px}
+.rp-sub{font-size:11px;opacity:.7;font-family:var(--mono)}
+
+.r-metric{padding:16px 22px;border-bottom:1px solid var(--border)}
+.r-lbl{font-size:10px;font-family:var(--mono);color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px}
+.r-num{font-family:var(--mono);font-size:clamp(20px,2.8vw,28px);font-weight:500;color:var(--accent);transition:all .3s cubic-bezier(.34,1.56,.64,1)}
+.r-num.red{color:var(--red)}
+.r-num.gold{color:var(--gold)}
+.r-unit{font-size:11px;color:var(--text3)}
+
+/* breakdown */
+.r-breakdown{background:var(--surface2);margin:0;overflow:hidden}
+.r-bd-header{padding:10px 22px;background:rgba(15,110,74,.08);font-size:10px;font-family:var(--mono);color:var(--accent);letter-spacing:.08em;text-transform:uppercase}
+.r-bd-item{padding:10px 22px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.r-bd-label{font-size:12px;color:var(--text2)}
+.r-bd-val{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--text)}
+.r-bd-val.save{color:var(--accent)}
+
+/* bar */
+.r-bar{padding:16px 22px;border-top:1px solid var(--border)}
+.r-bar-label{font-size:10px;font-family:var(--mono);color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px}
+.r-bar-track{height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;margin-bottom:6px}
+.r-bar-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:4px;transition:width .5s cubic-bezier(.34,1.2,.64,1)}
+.r-bar-labels{display:flex;justify-content:space-between;font-size:10px;font-family:var(--mono);color:var(--text3)}
+
+/* campaign result */
+.campaign-result{
+  margin:0 22px 16px;
+  background:var(--gold-bg);
+  border:1px solid var(--gold-border);
+  border-radius:8px;
+  padding:14px 16px;
+}
+.cr-title{font-size:10px;font-family:var(--mono);color:var(--gold);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px}
+.cr-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.cr-row:last-child{margin-bottom:0;padding-top:8px;border-top:1px dashed var(--gold-border)}
+.cr-label{font-size:12px;color:#7a5a00}
+.cr-val{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--gold)}
+.cr-val.big{font-size:16px;color:#c86000}
+
+/* comment */
+.r-comment{margin:0 22px 16px;padding:12px 14px;background:rgba(15,110,74,.07);border-left:3px solid var(--accent);border-radius:0 6px 6px 0;font-size:12px;color:var(--text2);line-height:1.75}
+.r-comment strong{color:var(--accent);font-weight:500}
+
+/* CTA */
+.r-cta{padding:18px 22px;border-top:1px solid var(--border);background:var(--surface2)}
+.r-cta-text{font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:12px}
+.r-cta-text strong{color:var(--text);font-weight:500}
+.inp{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:7px;font-family:var(--sans);font-size:13px;color:var(--text);padding:9px 12px;margin-bottom:8px;transition:border-color .2s}
+.inp:focus{outline:none;border-color:var(--accent)}
+.inp::placeholder{color:var(--text3)}
+.btn-send{width:100%;background:var(--accent);color:#fff;border:none;border-radius:7px;font-family:var(--sans);font-size:13px;font-weight:700;padding:11px;cursor:pointer;transition:opacity .2s}
+.btn-send:hover{opacity:.85}
+.success{display:none;align-items:center;gap:6px;background:rgba(15,110,74,.1);border:1px solid rgba(15,110,74,.3);border-radius:7px;padding:10px 12px;font-size:12px;color:var(--accent)}
+.success.show{display:flex}
+.cta-note{font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:8px}
+
+/* feature list */
+.feature-list{list-style:none;display:flex;flex-direction:column;gap:10px}
+.feature-item{display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--text2);line-height:1.6}
+.feature-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:6px}
+
+/* flow */
+.flow{display:flex;flex-direction:column;gap:0}
+.flow-item{display:flex;gap:16px;padding:14px 0;border-bottom:1px solid var(--border)}
+.flow-item:last-child{border-bottom:none}
+.flow-arrow{display:flex;flex-direction:column;align-items:center;gap:0;flex-shrink:0;width:28px}
+.flow-circle{
+  width:28px;height:28px;border-radius:50%;
+  background:var(--accent);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-family:var(--mono);font-weight:500;flex-shrink:0;
+}
+.flow-body{}
+.flow-title{font-size:13px;font-weight:500;color:var(--text);margin-bottom:3px}
+.flow-desc{font-size:12px;color:var(--text2);line-height:1.6}
+.flow-tag{display:inline-block;margin-top:6px;font-size:10px;letter-spacing:.06em;background:var(--accent3);color:var(--accent);border:1px solid var(--border);padding:2px 8px;border-radius:3px}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- header -->
+  <div class="header">
+    <div class="eyebrow">ほのぼのNEXT　対応済み</div>
+    <h1>ケアプランデータ連携で<br><em>毎月何時間</em>削減できますか？</h1>
+    <p class="header-desc">居宅介護支援事業所とサービス事業所の間で毎月発生するケアプラン・利用票のやりとりをオンライン化することで、どれだけの業務コストを削減できるかを試算します。</p>
+  </div>
+
+  <!-- campaign banner -->
+  <div class="campaign">
+    <div class="campaign-icon">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 2l2.4 4.8 5.3.8-3.8 3.7.9 5.2L10 14l-4.8 2.5.9-5.2L2.3 7.6l5.3-.8L10 2z" fill="#fff"/></svg>
+    </div>
+    <div class="campaign-body">
+      <div class="campaign-title">国保中央会　フリーパスキャンペーン実施中（2025年6月〜）</div>
+      <div class="campaign-text">通常 <strong>21,000円／年</strong> のライセンス料が、<strong>1年間無料</strong>でご利用いただけます。今が導入の絶好のタイミングです。</div>
+    </div>
+  </div>
+
+  <span class="back-link" onclick="history.back()">← トップに戻る</span>
+
+  <div class="layout">
+    <!-- LEFT -->
+    <div>
+
+      <div class="card" style="animation:fadeUp .4s ease both">
+        <div class="card-label">事業所の立場を選択</div>
+        <div class="role-grid">
+          <button class="role-btn selected" onclick="selRole(this,'cm')">
+            <div class="role-btn-title">居宅介護支援事業所</div>
+            <div class="role-btn-sub">ケアプランを作成・送付する側</div>
+          </button>
+          <button class="role-btn" onclick="selRole(this,'service')">
+            <div class="role-btn-title">介護サービス事業所</div>
+            <div class="role-btn-sub">利用票・提供票を受け取る側</div>
+          </button>
+        </div>
+        <div class="info-box" id="role-info">
+          <strong>居宅介護支援事業所の場合：</strong>毎月、担当利用者全員分のケアプラン・利用票をサービス事業所へ送付・確認・回収する作業が発生します。
+        </div>
+      </div>
+
+      <div class="card" style="animation:fadeUp .4s .06s ease both">
+        <div class="card-label">事業所の規模</div>
+        <div class="slider-field">
+          <div class="slider-label">
+            <span class="slider-label-text" id="label-users">担当利用者数（ケアマネ全員合計）</span>
+            <span class="slider-val" id="v-users">40名</span>
+          </div>
+          <div class="slider-wrap">
+            <div class="slider-fill" id="f-users"></div>
+            <input type="range" id="s-users" min="5" max="200" value="40" step="5" oninput="sv('users',this.value,v=>v+'名');calc()">
+          </div>
+        </div>
+        <div class="slider-field">
+          <div class="slider-label">
+            <span class="slider-label-text" id="label-staff">ケアマネ（担当スタッフ）数</span>
+            <span class="slider-val" id="v-staff">3名</span>
+          </div>
+          <div class="slider-wrap">
+            <div class="slider-fill" id="f-staff"></div>
+            <input type="range" id="s-staff" min="1" max="30" value="3" step="1" oninput="sv('staff',this.value,v=>v+'名');calc()">
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="animation:fadeUp .4s .10s ease both">
+        <div class="card-label" id="card-label-work">現在のやりとり業務（月次）</div>
+
+        <div class="slider-field">
+          <div class="slider-label">
+            <span class="slider-label-text" id="label-doc">ケアプラン・利用票の印刷／作成時間（月間・全体）</span>
+            <span class="slider-val" id="v-doc">8時間</span>
+          </div>
+          <div class="slider-wrap">
+            <div class="slider-fill" id="f-doc"></div>
+            <input type="range" id="s-doc" min="1" max="60" value="8" step="1" oninput="sv('doc',this.value,v=>v+'時間');calc()">
+          </div>
+        </div>
+
+        <div class="slider-field">
+          <div class="slider-label">
+            <span class="slider-label-text">FAX・郵送・持参による送受信にかかる時間（月間・全体）</span>
+            <span class="slider-val" id="v-fax">6時間</span>
+          </div>
+          <div class="slider-wrap">
+            <div class="slider-fill" id="f-fax"></div>
+            <input type="range" id="s-fax" min="1" max="40" value="6" step="1" oninput="sv('fax',this.value,v=>v+'時間');calc()">
+          </div>
+        </div>
+
+        <div class="slider-field">
+          <div class="slider-label">
+            <span class="slider-label-text">受信確認・差し戻し・再送信の対応時間（月間・全体）</span>
+            <span class="slider-val" id="v-check">4時間</span>
+          </div>
+          <div class="slider-wrap">
+            <div class="slider-fill" id="f-check"></div>
+            <input type="range" id="s-check" min="0" max="30" value="4" step="1" oninput="sv('check',this.value,v=>v+'時間');calc()">
+          </div>
+        </div>
+
+        <div class="slider-field">
+          <div class="slider-label">
+            <span class="slider-label-text">実績情報の手入力・突合・修正時間（月間・全体）</span>
+            <span class="slider-val" id="v-input">5時間</span>
+          </div>
+          <div class="slider-wrap">
+            <div class="slider-fill" id="f-input"></div>
+            <input type="range" id="s-input" min="0" max="40" value="5" step="1" oninput="sv('input',this.value,v=>v+'時間');calc()">
+          </div>
+        </div>
+
+        <div class="slider-field">
+          <div class="slider-label">
+            <span class="slider-label-text">担当者の平均時給</span>
+            <span class="slider-val" id="v-wage">1,500円</span>
+          </div>
+          <div class="slider-wrap">
+            <div class="slider-fill" id="f-wage"></div>
+            <input type="range" id="s-wage" min="1000" max="3500" value="1500" step="100" oninput="sv('wage',this.value,v=>Number(v).toLocaleString()+'円');calc()">
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="animation:fadeUp .4s .14s ease both">
+        <div class="card-label">ケアプランデータ連携　導入の流れ</div>
+        <div class="flow">
+          <div class="flow-item">
+            <div class="flow-circle">1</div>
+            <div class="flow-body">
+              <div class="flow-title">国保中央会システムへの申込み</div>
+              <div class="flow-desc">ケアプランデータ連携システムの利用申請を行います。フリーパスキャンペーン期間中は1年間無料。</div>
+              <div class="flow-tag">2025年6月〜　1年間無料</div>
+            </div>
+          </div>
+          <div class="flow-item">
+            <div class="flow-circle">2</div>
+            <div class="flow-body">
+              <div class="flow-title">ほのぼのNEXTの連携設定</div>
+              <div class="flow-desc">ほのぼのNEXTはケアプランデータ連携に対応済み。V4.1のシステムベンダ試験も実施済みです。</div>
+              <div class="flow-tag">ほのぼのNEXT　対応済み</div>
+            </div>
+          </div>
+          <div class="flow-item">
+            <div class="flow-circle">3</div>
+            <div class="flow-body">
+              <div class="flow-title">送受信事業所との合意</div>
+              <div class="flow-desc">連携先のサービス事業所も同システムへの加入が必要です。双方が導入することで効果が発揮されます。</div>
+            </div>
+          </div>
+          <div class="flow-item">
+            <div class="flow-circle">4</div>
+            <div class="flow-body">
+              <div class="flow-title">オンラインでのデータ送受信開始</div>
+              <div class="flow-desc">FAX・郵送・持参が不要になり、データが自動連携されます。実績情報の手入力も大幅に削減。</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="animation:fadeUp .4s .18s ease both">
+        <div class="card-label">連携できる主なデータ（ほのぼのNEXT）</div>
+        <ul class="feature-list">
+          <li class="feature-item"><span class="feature-dot"></span>第1〜3表（居宅サービス計画書）の出力・送付</li>
+          <li class="feature-item"><span class="feature-dot"></span>第6表・第7表（サービス利用票・利用票別表）の送受信</li>
+          <li class="feature-item"><span class="feature-dot"></span>利用者補足情報の共有</li>
+          <li class="feature-item"><span class="feature-dot"></span>実績情報（サービス利用票実績）の受取・自動反映</li>
+          <li class="feature-item"><span class="feature-dot"></span>介護予防支援の各種書類（※条件付き対応あり）</li>
+        </ul>
+      </div>
+
+    </div>
+
+    <!-- RIGHT: sticky result -->
+    <div class="result-panel">
+      <div class="rp-header">
+        <div class="rp-title">ケアプランデータ連携　効果試算</div>
+        <div class="rp-sub" id="rp-role">居宅介護支援事業所</div>
+      </div>
+
+      <div class="r-metric">
+        <div class="r-lbl">月間　連携業務の総工数</div>
+        <div class="r-num red" id="r-total">--</div>
+        <div class="r-unit">時間 / 月（現状）</div>
+      </div>
+      <div class="r-metric">
+        <div class="r-lbl">月間削減時間（導入後）</div>
+        <div class="r-num" id="r-save-hrs">--</div>
+        <div class="r-unit">時間 / 月</div>
+      </div>
+      <div class="r-metric">
+        <div class="r-lbl">年間削減コスト換算</div>
+        <div class="r-num gold" id="r-save-cost">--</div>
+        <div class="r-unit">万円 / 年</div>
+      </div>
+
+      <div class="r-bar">
+        <div class="r-bar-label">業務削減率（推定）</div>
+        <div class="r-bar-track"><div class="r-bar-fill" id="r-bar-fill" style="width:0%"></div></div>
+        <div class="r-bar-labels"><span>現状</span><span id="r-bar-pct">--%</span></div>
+      </div>
+
+      <div class="r-breakdown">
+        <div class="r-bd-header">削減内訳</div>
+        <div class="r-bd-item">
+          <span class="r-bd-label">印刷・書類作成</span>
+          <span class="r-bd-val save" id="bd-doc">--時間/月</span>
+        </div>
+        <div class="r-bd-item">
+          <span class="r-bd-label">FAX・郵送・持参</span>
+          <span class="r-bd-val save" id="bd-fax">--時間/月</span>
+        </div>
+        <div class="r-bd-item">
+          <span class="r-bd-label">確認・差し戻し対応</span>
+          <span class="r-bd-val save" id="bd-check">--時間/月</span>
+        </div>
+        <div class="r-bd-item">
+          <span class="r-bd-label">実績入力・突合</span>
+          <span class="r-bd-val save" id="bd-input">--時間/月</span>
+        </div>
+      </div>
+
+      <!-- campaign benefit -->
+      <div class="campaign-result" style="margin-top:16px">
+        <div class="cr-title">フリーパスキャンペーン適用時</div>
+        <div class="cr-row">
+          <span class="cr-label">通常ライセンス料（年）</span>
+          <span class="cr-val">21,000円</span>
+        </div>
+        <div class="cr-row">
+          <span class="cr-label">キャンペーン期間の費用</span>
+          <span class="cr-val" style="color:var(--accent);font-weight:700">0円（1年間）</span>
+        </div>
+        <div class="cr-row">
+          <span class="cr-label">1年間の実質削減効果</span>
+          <span class="cr-val big" id="cr-total">-- 万円</span>
+        </div>
+      </div>
+
+      <div class="r-comment" id="r-comment">入力内容に応じて試算結果が表示されます。</div>
+
+      <div class="r-cta">
+        <p class="r-cta-text">この試算と<strong>導入サポート資料</strong>を無料でお送りします</p>
+        <input class="inp" type="email" id="inp-email" placeholder="メールアドレス">
+        <input class="inp" type="text"  id="inp-org"   placeholder="法人名・事業所名（任意）">
+        <button class="btn-send" onclick="sendLead()">資料を受け取る</button>
+        <div class="success" id="success">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="#0f6e4a" stroke-width="1.5"/><path d="M5 8l2 2 4-4" stroke="#0f6e4a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          送信完了。担当者よりご連絡します。
+        </div>
+        <p class="cta-note">※ 個人情報はND Softwareが適切に管理します</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script>
+let role = 'cm';
+
+const ROLE_NAMES = { cm:'居宅介護支援事業所', service:'介護サービス事業所' };
+const ROLE_INFO = {
+  cm:'<strong>居宅介護支援事業所の場合：</strong>毎月、担当利用者全員分のケアプラン・利用票をサービス事業所へ送付・確認・回収する作業が発生します。',
+  service:'<strong>介護サービス事業所の場合：</strong>毎月、複数の居宅介護支援事業所から利用票・提供票を受け取り、実績を入力して返送する作業が発生します。'
+};
+
+// 削減率（業務種別）- FAX廃止効果が最大
+const REDUCE = { doc:0.85, fax:0.95, check:0.80, input:0.75 };
+
+function g(id){ return document.getElementById(id); }
+
+function sv(id, val, fmt){
+  g('v-'+id).textContent = fmt(val);
+  const el = g('s-'+id);
+  const pct = (val - el.min) / (el.max - el.min) * 100;
+  g('f-'+id).style.width = pct + '%';
+}
+
+function selRole(btn, r){
+  document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  role = r;
+  g('rp-role').textContent = ROLE_NAMES[r];
+  g('role-info').innerHTML = ROLE_INFO[r];
+  calc();
+}
+
+function calc(){
+  const docHr   = +g('s-doc').value;
+  const faxHr   = +g('s-fax').value;
+  const checkHr = +g('s-check').value;
+  const inputHr = +g('s-input').value;
+  const wage    = +g('s-wage').value;
+
+  const totalHr  = docHr + faxHr + checkHr + inputHr;
+
+  const saveDoc   = docHr   * REDUCE.doc;
+  const saveFax   = faxHr   * REDUCE.fax;
+  const saveCheck = checkHr * REDUCE.check;
+  const saveInput = inputHr * REDUCE.input;
+  const saveTotal = saveDoc + saveFax + saveCheck + saveInput;
+
+  const saveCostYear = Math.round(saveTotal * wage * 12 / 10000);
+  const reducePct    = totalHr > 0 ? Math.round(saveTotal / totalHr * 100) : 0;
+  const crTotal      = saveCostYear; // キャンペーン期間はライセンス料0なので削減効果＝そのまま
+
+  g('r-total').textContent     = Math.round(totalHr * 10) / 10;
+  g('r-save-hrs').textContent  = Math.round(saveTotal * 10) / 10;
+  g('r-save-cost').textContent = saveCostYear;
+  g('r-bar-fill').style.width  = Math.min(reducePct, 100) + '%';
+  g('r-bar-pct').textContent   = reducePct + '%削減';
+  g('cr-total').textContent    = saveCostYear + ' 万円';
+
+  g('bd-doc').textContent   = Math.round(saveDoc   * 10) / 10 + '時間/月';
+  g('bd-fax').textContent   = Math.round(saveFax   * 10) / 10 + '時間/月';
+  g('bd-check').textContent = Math.round(saveCheck * 10) / 10 + '時間/月';
+  g('bd-input').textContent = Math.round(saveInput * 10) / 10 + '時間/月';
+
+  const perStaff = +g('s-staff').value;
+  const perPerson = perStaff > 0 ? Math.round(saveTotal / perStaff * 10) / 10 : 0;
+
+  let comment = '';
+  if(totalHr === 0){
+    comment = '業務時間を入力すると試算結果が表示されます。';
+  } else if(saveCostYear >= 30){
+    comment = `特にFAX・郵送の廃止効果が大きく、月間<strong>${Math.round(saveTotal * 10)/10}時間</strong>の削減が見込まれます。年間<strong>${saveCostYear}万円</strong>相当のコスト削減に加え、フリーパスキャンペーンで1年間はライセンス料も無料です。`;
+  } else if(saveCostYear >= 10){
+    comment = `月間<strong>${Math.round(saveTotal * 10)/10}時間</strong>の業務を削減できます。スタッフ1人あたり月<strong>${perPerson}時間</strong>の余力が生まれ、利用者対応や新規担当への時間を確保できます。`;
+  } else {
+    comment = `データ連携により月間<strong>${Math.round(saveTotal * 10)/10}時間</strong>の削減効果が見込まれます。フリーパスキャンペーン中は初期コストゼロで始められます。`;
+  }
+  g('r-comment').innerHTML = comment;
+}
+
+function sendLead(){
+  const email = g('inp-email').value.trim();
+  if(!email || !email.includes('@')){
+    g('inp-email').style.borderColor = 'var(--accent)';
+    setTimeout(() => g('inp-email').style.borderColor = '', 1200);
+    return;
+  }
+  g('success').classList.add('show');
+  ['inp-email','inp-org'].forEach(id => g(id).disabled = true);
+  const btn = document.querySelector('.btn-send');
+  btn.disabled = true; btn.style.opacity = '.4';
+}
+
+// init tracks
+['users','staff','doc','fax','check','input','wage'].forEach(id => {
+  const el = g('s-'+id); if(!el) return;
+  const pct = (el.value - el.min) / (el.max - el.min) * 100;
+  const f = g('f-'+id); if(f) f.style.width = pct + '%';
+});
+calc();
+</script>
+</body>
+</html>

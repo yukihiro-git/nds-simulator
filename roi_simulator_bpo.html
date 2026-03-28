@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>請求事務支援サービス　コスト比較シミュレーター</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=Zen+Kaku+Gothic+New:wght@700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f2f6f9;
+  --surface:#ffffff;
+  --surface2:#e8eef4;
+  --border:#cdd8e3;
+  --accent:#1a5080;
+  --accent2:#2878c0;
+  --accent-light:#eaf2fb;
+  --green:#2a7a50;
+  --green-bg:#eaf5f0;
+  --red:#c84b2f;
+  --red-bg:#fdf0ec;
+  --gold:#c8860a;
+  --gold-bg:#fdf6e3;
+  --gold-border:#f0d080;
+  --text:#0e1820;
+  --text2:#3a5060;
+  --text3:#7a90a0;
+  --mono:'DM Mono',monospace;
+  --sans:'Noto Sans JP',sans-serif;
+  --display:'Zen Kaku Gothic New',sans-serif;
+  --r:10px;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh}
+body::before{content:'';position:fixed;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+
+.wrapper{max-width:900px;margin:0 auto;padding:52px 24px 80px}
+
+.header{margin-bottom:36px;animation:fadeUp .45s ease both}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-family:var(--mono);letter-spacing:.12em;color:var(--accent);text-transform:uppercase;margin-bottom:14px}
+.eyebrow::before{content:'';width:20px;height:1px;background:var(--accent)}
+h1{font-family:var(--display);font-size:clamp(22px,3.8vw,34px);font-weight:900;letter-spacing:-.02em;line-height:1.2;margin-bottom:10px}
+h1 em{font-style:normal;color:var(--accent)}
+.header-desc{font-size:13px;color:var(--text2);line-height:1.8;font-weight:300;max-width:580px}
+
+/* campaign banner */
+.campaign{
+  background:var(--gold-bg);border:1.5px solid var(--gold-border);
+  border-radius:var(--r);padding:14px 18px;margin-bottom:28px;
+  display:flex;align-items:center;gap:12px;
+  animation:fadeUp .45s .05s ease both;
+}
+.campaign-star{font-size:18px;flex-shrink:0}
+.campaign-text{font-size:13px;color:#7a5a00;line-height:1.6}
+.campaign-text strong{color:#c86000;font-weight:700;font-size:15px}
+
+.prereq{display:inline-flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:7px 14px;margin-bottom:24px;font-size:12px;color:var(--text2);animation:fadeUp .45s .08s ease both}
+.prereq strong{color:var(--accent);font-weight:500}
+
+.back-link{display:block;margin-bottom:28px;display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--text3);font-family:var(--mono);letter-spacing:.04em;cursor:pointer;transition:color .2s}
+.back-link:hover{color:var(--accent)}
+
+/* layout */
+.layout{display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start}
+@media(max-width:700px){.layout{grid-template-columns:1fr}}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:28px;margin-bottom:16px}
+.card-label{font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--text3);text-transform:uppercase;margin-bottom:18px}
+
+/* course selector */
+.course-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:480px){.course-grid{grid-template-columns:1fr}}
+.course-btn{border:1.5px solid var(--border);border-radius:8px;padding:13px 14px;cursor:pointer;background:var(--surface);text-align:left;transition:all .2s;font-family:var(--sans)}
+.course-btn:hover{border-color:var(--accent2)}
+.course-btn.selected{border-color:var(--accent);background:var(--accent-light)}
+.course-btn-title{font-size:12px;font-weight:500;color:var(--text);margin-bottom:3px;line-height:1.3}
+.course-btn-desc{font-size:11px;color:var(--text3);line-height:1.5}
+
+/* slider */
+.slider-field{margin-bottom:22px}
+.slider-field:last-child{margin-bottom:0}
+.slider-label{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;gap:8px}
+.slider-label-text{font-size:13px;color:var(--text2);line-height:1.4}
+.slider-val{font-family:var(--mono);font-size:15px;font-weight:500;color:var(--text);flex-shrink:0}
+.slider-wrap{position:relative;height:20px;display:flex;align-items:center}
+input[type=range]{-webkit-appearance:none;width:100%;height:4px;background:var(--border);border-radius:2px;outline:none;cursor:pointer;position:relative;z-index:1}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;background:var(--surface);border:2px solid var(--accent);border-radius:50%;cursor:pointer;transition:transform .15s}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2)}
+.slider-fill{position:absolute;left:0;top:50%;height:4px;background:var(--accent);border-radius:2px;pointer-events:none;transform:translateY(-50%);z-index:0}
+
+/* risk check */
+.risk-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:480px){.risk-grid{grid-template-columns:1fr}}
+.risk-item{display:flex;align-items:flex-start;gap:10px;border:1.5px solid var(--border);border-radius:8px;padding:12px 14px;cursor:pointer;transition:all .2s;user-select:none}
+.risk-item:hover{border-color:var(--accent2)}
+.risk-item.checked{border-color:var(--red);background:var(--red-bg)}
+.risk-check{width:18px;height:18px;flex-shrink:0;border:1.5px solid var(--border);border-radius:4px;display:flex;align-items:center;justify-content:center;transition:all .2s;margin-top:1px}
+.risk-item.checked .risk-check{background:var(--red);border-color:var(--red)}
+.risk-text{font-size:12px;color:var(--text);line-height:1.5}
+
+.note{background:var(--accent-light);border:1px solid rgba(26,80,128,.2);border-radius:8px;padding:12px 14px;font-size:12px;color:var(--text2);line-height:1.7;margin-top:16px}
+.note strong{color:var(--accent);font-weight:500}
+
+/* feature list */
+.feature-list{list-style:none;display:flex;flex-direction:column;gap:9px}
+.feature-item{display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--text2);line-height:1.6}
+.feature-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:6px}
+
+/* sticky result panel */
+.result-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;position:sticky;top:24px;animation:fadeUp .45s .1s ease both}
+.rp-header{background:var(--accent);color:#fff;padding:18px 22px}
+.rp-title{font-size:13px;font-weight:500;margin-bottom:2px}
+.rp-sub{font-size:11px;opacity:.7;font-family:var(--mono)}
+
+.r-metric{padding:16px 22px;border-bottom:1px solid var(--border)}
+.r-lbl{font-size:10px;font-family:var(--mono);color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px}
+.r-num{font-family:var(--mono);font-size:clamp(20px,2.8vw,26px);font-weight:500;color:var(--accent);transition:all .3s cubic-bezier(.34,1.56,.64,1)}
+.r-num.green{color:var(--green)}
+.r-num.red{color:var(--red)}
+.r-unit{font-size:11px;color:var(--text3)}
+
+/* cost compare */
+.cost-compare{padding:16px 22px;border-bottom:1px solid var(--border)}
+.cc-title{font-size:10px;font-family:var(--mono);color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:12px}
+.cc-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.cc-row:last-child{margin-bottom:0}
+.cc-label{font-size:11px;color:var(--text3);width:64px;flex-shrink:0;text-align:right;line-height:1.3}
+.cc-bar-wrap{flex:1;height:22px;background:var(--surface2);border-radius:4px;overflow:hidden;position:relative}
+.cc-bar{height:100%;border-radius:4px;display:flex;align-items:center;padding-left:8px;transition:width .5s cubic-bezier(.34,1.2,.64,1)}
+.cc-bar.self{background:rgba(200,75,47,.2)}
+.cc-bar.bpo{background:rgba(40,120,192,.25)}
+.cc-bar-val{font-family:var(--mono);font-size:10px;white-space:nowrap;color:var(--text);position:absolute;right:8px;top:50%;transform:translateY(-50%)}
+
+/* breakdown */
+.r-breakdown{background:var(--surface2)}
+.r-bd-header{padding:10px 22px;background:rgba(26,80,128,.08);font-size:10px;font-family:var(--mono);color:var(--accent);letter-spacing:.08em;text-transform:uppercase}
+.r-bd-item{padding:9px 22px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.r-bd-label{font-size:12px;color:var(--text2)}
+.r-bd-val{font-family:var(--mono);font-size:12px;font-weight:500}
+.r-bd-val.cost{color:var(--red)}
+.r-bd-val.save{color:var(--green)}
+.r-bd-val.neutral{color:var(--text)}
+
+/* trial banner in result */
+.trial-banner{
+  margin:16px 22px;
+  background:var(--gold-bg);border:1px solid var(--gold-border);
+  border-radius:8px;padding:12px 16px;
+}
+.tb-title{font-size:10px;font-family:var(--mono);color:var(--gold);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px}
+.tb-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.tb-row:last-child{margin-bottom:0;padding-top:7px;border-top:1px dashed var(--gold-border)}
+.tb-label{font-size:12px;color:#7a5a00}
+.tb-val{font-family:var(--mono);font-size:12px;font-weight:500;color:var(--gold)}
+.tb-val.big{font-size:15px;color:#c86000;font-weight:700}
+
+.r-comment{margin:0 22px 16px;padding:12px 14px;background:rgba(26,80,128,.07);border-left:3px solid var(--accent);border-radius:0 6px 6px 0;font-size:12px;color:var(--text2);line-height:1.75}
+.r-comment strong{color:var(--accent);font-weight:500}
+
+.r-cta{padding:18px 22px;border-top:1px solid var(--border);background:var(--surface2)}
+.r-cta-text{font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:12px}
+.r-cta-text strong{color:var(--text);font-weight:500}
+.inp{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:7px;font-family:var(--sans);font-size:13px;color:var(--text);padding:9px 12px;margin-bottom:8px;transition:border-color .2s}
+.inp:focus{outline:none;border-color:var(--accent)}
+.inp::placeholder{color:var(--text3)}
+.btn-send{width:100%;background:var(--accent);color:#fff;border:none;border-radius:7px;font-family:var(--sans);font-size:13px;font-weight:700;padding:11px;cursor:pointer;transition:opacity .2s}
+.btn-send:hover{opacity:.85}
+.success{display:none;align-items:center;gap:6px;background:var(--green-bg);border:1px solid rgba(42,122,80,.3);border-radius:7px;padding:10px 12px;font-size:12px;color:var(--green)}
+.success.show{display:flex}
+.cta-note{font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:8px}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <div class="header">
+    <div class="eyebrow">ほのぼのNEXT / more　専用サービス</div>
+    <h1>請求担当者を<em>雇い続けるコスト</em>と<br>委託するコスト、比べてみましょう。</h1>
+    <p class="header-desc">請求事務支援サービス（BPO）は、NDソフトウェアのスタッフが請求データ入力・計算処理を代行します。自社で対応し続けるコストと委託コストを比較試算します。</p>
+  </div>
+
+  <div class="campaign">
+    <div class="campaign-star">★</div>
+    <div class="campaign-text"><strong>ただ今3ヶ月無料お試し中！</strong>　まずはリスクゼロで体験できます。条件により適用できないケースもあります。</div>
+  </div>
+
+  <div class="prereq">利用には <strong>ほのぼのNEXT</strong> または <strong>ほのぼのmore</strong> の導入が必要です</div>
+  <span class="back-link" onclick="history.back()">← トップに戻る</span>
+
+  <div class="layout">
+    <!-- LEFT -->
+    <div>
+
+      <div class="card" style="animation:fadeUp .4s ease both">
+        <div class="card-label">ご検討中のコースを選択</div>
+        <div class="course-grid">
+          <button class="course-btn selected" onclick="selCourse(this,'basic',1.0)">
+            <div class="course-btn-title">基本コース</div>
+            <div class="course-btn-desc">実績入力は自社で行い、チェック・算定・国保連請求ファイル作成を委託</div>
+          </button>
+          <button class="course-btn" onclick="selCourse(this,'omakase',1.45)">
+            <div class="course-btn-title">おまかせコース</div>
+            <div class="course-btn-desc">実績入力から国保連請求ファイル作成まで全て委託</div>
+          </button>
+          <button class="course-btn" onclick="selCourse(this,'ryokin',0.6)">
+            <div class="course-btn-title">利用料コース</div>
+            <div class="course-btn-desc">利用者への利用料請求書データ作成のみを委託</div>
+          </button>
+          <button class="course-btn" onclick="selCourse(this,'combined',1.85)">
+            <div class="course-btn-title">おまかせ＋利用料</div>
+            <div class="course-btn-desc">おまかせコースと利用料コースの併用</div>
+          </button>
+        </div>
+      </div>
+
+      <div class="card" style="animation:fadeUp .4s .06s ease both">
+        <div class="card-label">事業所の規模</div>
+        <div class="slider-field">
+          <div class="slider-label">
+            <span class="slider-label-text">月間の請求件数（利用者数の目安）</span>
+            <span class="slider-val" id="v-claims">50件</span>
+          </div>
+          <div class="slider-wrap">
+            <div class="slider-fill" id="f-claims"></div>
+            <input type="range" id="s-claims" min="10" max="300" value="50" step="5" oninput="sv('claims',this.value,v=>v+'件');calc()">
+          </div>
+        </div>
+        <div class="slider-field">
+          <div class="slider-label">
+            <span class="slider-label-text">事業所数</span>
+            <span class="slider-val" id="v-offices">1事業所</span>
+          </div>
+          <div class="slider-wrap">
+            <div class="slider-fill" id="f-offices"></div>
+            <input type="range" id="s-offices" min="1" max="20" value="1" step="1" oninput="sv('offices',this.value,v=>v+'事業所');calc()">
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="animation:fadeUp .4s .10s ease both">
+        <div class="card-label">現在の請求担当者のコスト</div>
+        <div class="slider-field">
+          <div class="slider-label">
+            <span class="slider-label-text">請求専任（または兼任）担当者数</span>
+            <span class="slider-val" id="v-staff">1名</span>
+          </div>
+          <div class="slider-wrap">
+            <div class="slider-fill" id="f-staff"></div>
+            <input type="range" id="s-staff" min="0.5" max="5" value="1" step="0.5" oninput="sv('staff',this.value,v=>v+'名');calc()">
+          </div>
+        </div>
+        <div class="slider-field">
+          <div class="slider-label">
+            <span class="slider-label-text">担当者の月給（手取りベース）</span>
+            <span class="slider-val" id="v-salary">22万円</span>
+          </div>
+          <div class="slider-wrap">
+            <div class="slider-fill" id="f-salary"></div>
+            <input type="range" id="s-salary" min="15" max="50" value="22" step="1" oninput="sv('salary',this.value,v=>v+'万円');calc()">
+          </div>
+        </div>
+        <div class="slider-field">
+          <div class="slider-label">
+            <span class="slider-label-text">請求業務が担当者業務全体に占める割合</span>
+            <span class="slider-val" id="v-ratio">40%</span>
+          </div>
+          <div class="slider-wrap">
+            <div class="slider-fill" id="f-ratio"></div>
+            <input type="range" id="s-ratio" min="10" max="100" value="40" step="5" oninput="sv('ratio',this.value,v=>v+'%');calc()">
+          </div>
+        </div>
+        <div class="note">
+          <strong>社会保険料・法定福利費：</strong>月給の約15%が事業主負担として別途発生します。試算には自動で加算されます。
+        </div>
+      </div>
+
+      <div class="card" style="animation:fadeUp .4s .14s ease both">
+        <div class="card-label">現在の課題（該当するものを選択）</div>
+        <div class="risk-grid">
+          <div class="risk-item" onclick="toggleRisk(this)">
+            <div class="risk-check"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="risk-text">請求担当者が退職・異動した、または退職リスクがある</div>
+          </div>
+          <div class="risk-item" onclick="toggleRisk(this)">
+            <div class="risk-check"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="risk-text">返戻・過誤が毎月発生しており、対応に追われている</div>
+          </div>
+          <div class="risk-item" onclick="toggleRisk(this)">
+            <div class="risk-check"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="risk-text">加算算定の複雑化で正確な請求に自信がない</div>
+          </div>
+          <div class="risk-item" onclick="toggleRisk(this)">
+            <div class="risk-check"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="risk-text">BCP対策として請求業務の継続性を確保したい</div>
+          </div>
+          <div class="risk-item" onclick="toggleRisk(this)">
+            <div class="risk-check"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="risk-text">複数事業所の請求業務を一括で効率化したい</div>
+          </div>
+          <div class="risk-item" onclick="toggleRisk(this)">
+            <div class="risk-check"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="risk-text">介護報酬改定への対応が追いつかない</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="animation:fadeUp .4s .18s ease both">
+        <div class="card-label">請求事務支援サービスの主な特長</div>
+        <ul class="feature-list">
+          <li class="feature-item"><span class="feature-dot"></span>「ほのぼの」のプロが請求データ入力・計算処理を代行。加算の見落としゼロへ</li>
+          <li class="feature-item"><span class="feature-dot"></span>制度改正・加算変更にも迅速対応。担当者の学習コストが不要に</li>
+          <li class="feature-item"><span class="feature-dot"></span>返戻・過誤の発生率を大幅削減。対応コストと精神的負担を解消</li>
+          <li class="feature-item"><span class="feature-dot"></span>遠隔接続でBCP対応。災害・感染症時でも請求業務を継続</li>
+          <li class="feature-item"><span class="feature-dot"></span>大規模法人・複数事業所の一括対応が可能。スケールメリットあり</li>
+          <li class="feature-item"><span class="feature-dot"></span>ほのぼのNEXT・more双方に対応。介護・障害福祉の幅広い事業種別をカバー</li>
+        </ul>
+      </div>
+
+    </div>
+
+    <!-- RIGHT: sticky result -->
+    <div class="result-panel">
+      <div class="rp-header">
+        <div class="rp-title">請求事務支援サービス　コスト比較</div>
+        <div class="rp-sub" id="rp-course">基本コース</div>
+      </div>
+
+      <div class="r-metric">
+        <div class="r-lbl">現状の請求業務コスト</div>
+        <div class="r-num red" id="r-self-cost">--</div>
+        <div class="r-unit">万円 / 月（人件費換算）</div>
+      </div>
+      <div class="r-metric">
+        <div class="r-lbl">BPO委託時の概算コスト</div>
+        <div class="r-num" id="r-bpo-cost">--</div>
+        <div class="r-unit">万円 / 月（目安）</div>
+      </div>
+      <div class="r-metric">
+        <div class="r-lbl">年間コスト差（自社 vs 委託）</div>
+        <div class="r-num green" id="r-diff">--</div>
+        <div class="r-unit" id="r-diff-unit">万円 / 年</div>
+      </div>
+
+      <!-- cost compare bars -->
+      <div class="cost-compare">
+        <div class="cc-title">月間コスト比較</div>
+        <div class="cc-row">
+          <div class="cc-label">自社対応</div>
+          <div class="cc-bar-wrap">
+            <div class="cc-bar self" id="cc-self" style="width:100%"></div>
+            <div class="cc-bar-val" id="cc-self-val">--万円</div>
+          </div>
+        </div>
+        <div class="cc-row">
+          <div class="cc-label">BPO委託</div>
+          <div class="cc-bar-wrap">
+            <div class="cc-bar bpo" id="cc-bpo" style="width:60%"></div>
+            <div class="cc-bar-val" id="cc-bpo-val">--万円</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="r-breakdown">
+        <div class="r-bd-header">自社コストの内訳</div>
+        <div class="r-bd-item">
+          <span class="r-bd-label">給与（請求業務按分）</span>
+          <span class="r-bd-val cost" id="bd-salary">--万円/月</span>
+        </div>
+        <div class="r-bd-item">
+          <span class="r-bd-label">社会保険料（事業主負担）</span>
+          <span class="r-bd-val cost" id="bd-insurance">--万円/月</span>
+        </div>
+        <div class="r-bd-item">
+          <span class="r-bd-label">採用・教育コスト（月換算）</span>
+          <span class="r-bd-val cost" id="bd-recruit">--万円/月</span>
+        </div>
+        <div class="r-bd-item">
+          <span class="r-bd-label">リスクチェック数</span>
+          <span class="r-bd-val" id="bd-risk" style="color:var(--red)">-- 項目</span>
+        </div>
+      </div>
+
+      <div class="trial-banner">
+        <div class="tb-title">3ヶ月無料お試し適用時</div>
+        <div class="tb-row">
+          <span class="tb-label">お試し期間のBPOコスト</span>
+          <span class="tb-val">0円（3ヶ月）</span>
+        </div>
+        <div class="tb-row">
+          <span class="tb-label">お試し期間中の削減効果</span>
+          <span class="tb-val big" id="trial-save">-- 万円</span>
+        </div>
+      </div>
+
+      <div class="r-comment" id="r-comment">入力内容に応じて試算結果が表示されます。</div>
+
+      <div class="r-cta">
+        <p class="r-cta-text">この試算と<strong>サービス詳細資料・料金案内</strong>を無料でお送りします</p>
+        <input class="inp" type="email" id="inp-email" placeholder="メールアドレス">
+        <input class="inp" type="text"  id="inp-org"   placeholder="法人名・事業所名（任意）">
+        <button class="btn-send" onclick="sendLead()">資料を受け取る</button>
+        <div class="success" id="success">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="#2a7a50" stroke-width="1.5"/><path d="M5 8l2 2 4-4" stroke="#2a7a50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          送信完了。担当者よりご連絡します。
+        </div>
+        <p class="cta-note">※ 個人情報はND Softwareが適切に管理します</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script>
+const COURSE_NAMES = {
+  basic:'基本コース',
+  omakase:'おまかせコース',
+  ryokin:'利用料コース',
+  combined:'おまかせ＋利用料コース',
+};
+
+// BPO概算月額（件数×単価）の係数。実際の料金は問合せが必要なため目安値
+// 基本コース: 1件あたり約600円目安
+const BPO_UNIT = { basic:600, omakase:1100, ryokin:400, combined:1400 };
+
+let courseFactor = 1.0;
+let courseKey = 'basic';
+let riskCount = 0;
+
+function g(id){ return document.getElementById(id); }
+
+function sv(id, val, fmt){
+  g('v-'+id).textContent = fmt(val);
+  const el = g('s-'+id);
+  const pct = (val - el.min) / (el.max - el.min) * 100;
+  g('f-'+id).style.width = pct + '%';
+}
+
+function selCourse(btn, key, factor){
+  document.querySelectorAll('.course-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  courseKey = key; courseFactor = factor;
+  g('rp-course').textContent = COURSE_NAMES[key];
+  calc();
+}
+
+function toggleRisk(el){
+  el.classList.toggle('checked');
+  riskCount = document.querySelectorAll('.risk-item.checked').length;
+  calc();
+}
+
+function calc(){
+  const claims  = +g('s-claims').value;
+  const offices = +g('s-offices').value;
+  const staff   = +g('s-staff').value;
+  const salary  = +g('s-salary').value;   // 万円
+  const ratio   = +g('s-ratio').value / 100;
+
+  const totalClaims = claims * offices;
+
+  // 自社コスト（月額・万円）
+  const salaryApply   = Math.round(salary * staff * ratio * 10) / 10;
+  const insuranceApply = Math.round(salary * staff * ratio * 0.15 * 10) / 10;
+  // 採用・教育コスト月換算（採用費平均50万÷24ヶ月 ≈ 2万/月）
+  const recruitMonthly = Math.round(2 * staff * ratio * 10) / 10;
+  const selfTotal = Math.round((salaryApply + insuranceApply + recruitMonthly) * 10) / 10;
+
+  // BPO概算コスト（月額・万円）
+  const bpoUnit  = BPO_UNIT[courseKey] || 600;
+  const bpoTotal = Math.round(totalClaims * bpoUnit / 10000 * 10) / 10;
+
+  const diffMonth = Math.round((selfTotal - bpoTotal) * 10) / 10;
+  const diffYear  = Math.round(diffMonth * 12 * 10) / 10;
+  const trialSave = Math.round(selfTotal * 3 * 10) / 10; // 3ヶ月無料期間の節約
+
+  // display
+  g('r-self-cost').textContent = selfTotal;
+  g('r-bpo-cost').textContent  = bpoTotal;
+
+  if(diffYear >= 0){
+    g('r-diff').textContent     = diffYear;
+    g('r-diff-unit').textContent = '万円/年 削減（委託が有利）';
+    g('r-diff').className = 'r-num green';
+  } else {
+    g('r-diff').textContent     = Math.abs(diffYear);
+    g('r-diff-unit').textContent = '万円/年 増加（自社が有利）';
+    g('r-diff').className = 'r-num';
+  }
+
+  // bars
+  const selfMax = Math.max(selfTotal, bpoTotal, 1);
+  g('cc-self').style.width    = (selfTotal / selfMax * 100) + '%';
+  g('cc-bpo').style.width     = Math.max(bpoTotal / selfMax * 100, 3) + '%';
+  g('cc-self-val').textContent = selfTotal + '万円';
+  g('cc-bpo-val').textContent  = bpoTotal  + '万円';
+
+  // breakdown
+  g('bd-salary').textContent    = salaryApply + '万円/月';
+  g('bd-insurance').textContent = insuranceApply + '万円/月';
+  g('bd-recruit').textContent   = recruitMonthly + '万円/月';
+  g('bd-risk').textContent      = riskCount + ' 項目';
+  g('trial-save').textContent   = trialSave + ' 万円';
+
+  // comment
+  let comment = '';
+  if(selfTotal === 0){ comment = '担当者数・月給を入力すると試算結果が表示されます。'; }
+  else if(diffYear > 30){
+    comment = `自社対応コストは月<strong>${selfTotal}万円</strong>。委託すれば年間<strong>${diffYear}万円</strong>のコスト削減が見込まれます。3ヶ月無料期間中に<strong>${trialSave}万円</strong>の効果をリスクゼロで確認できます。`;
+  } else if(diffYear > 0){
+    comment = `月<strong>${diffMonth}万円</strong>のコスト削減に加え、担当者が解放された時間をケアの質向上や新規利用者対応に充てられます。コスト以外のメリットも大きいです。`;
+  } else if(riskCount >= 2){
+    comment = `コスト面は拮抗していますが、<strong>${riskCount}件の課題</strong>が選択されています。返戻リスク・人材リスク・BCP対応の観点から、委託へのシフトを検討する価値があります。`;
+  } else {
+    comment = `現状は自社対応がコスト面でやや有利です。ただし加算改定対応・返戻リスク・担当者不在時のリスクも合わせて検討されることをお勧めします。`;
+  }
+  g('r-comment').innerHTML = comment;
+}
+
+function sendLead(){
+  const email = g('inp-email').value.trim();
+  if(!email || !email.includes('@')){
+    g('inp-email').style.borderColor = 'var(--accent)';
+    setTimeout(() => g('inp-email').style.borderColor = '', 1200);
+    return;
+  }
+  g('success').classList.add('show');
+  ['inp-email','inp-org'].forEach(id => g(id).disabled = true);
+  const btn = document.querySelector('.btn-send');
+  btn.disabled = true; btn.style.opacity = '.4';
+}
+
+['claims','offices','staff','salary','ratio'].forEach(id => {
+  const el = g('s-'+id); if(!el) return;
+  const pct = (el.value - el.min) / (el.max - el.min) * 100;
+  const f = g('f-'+id); if(f) f.style.width = pct + '%';
+});
+calc();
+</script>
+</body>
+</html>

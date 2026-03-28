@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NDソフトウェア　業務改善シミュレーター</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=Zen+Kaku+Gothic+New:wght@700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f7f5f1;
+  --surface:#ffffff;
+  --ink:#1a1714;
+  --ink2:#4a4540;
+  --ink3:#908880;
+  --border:#e0dbd2;
+  --warm:#f0ebe2;
+  --sans:'Noto Sans JP',sans-serif;
+  --display:'Zen Kaku Gothic New',sans-serif;
+  --mono:'DM Mono',monospace;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);min-height:100vh;overflow-x:hidden}
+
+/* ===== HEADER ===== */
+.site-header{
+  padding:20px 40px;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid var(--border);
+  background:var(--surface);
+  position:sticky;top:0;z-index:100;
+}
+.logo{
+  display:flex;align-items:center;gap:10px;
+}
+.logo-mark{
+  width:32px;height:32px;
+  background:var(--ink);
+  border-radius:6px;
+  display:flex;align-items:center;justify-content:center;
+}
+.logo-mark svg{width:18px;height:18px}
+.logo-name{
+  font-family:var(--display);
+  font-size:14px;font-weight:700;
+  color:var(--ink);letter-spacing:.02em;
+  line-height:1.2;
+}
+.logo-name span{
+  display:block;font-size:10px;font-weight:400;
+  color:var(--ink3);letter-spacing:.06em;font-family:var(--mono);
+}
+.header-note{
+  font-size:11px;color:var(--ink3);font-family:var(--mono);
+  letter-spacing:.06em;
+}
+
+/* ===== HERO ===== */
+.hero{
+  padding:72px 40px 64px;
+  max-width:960px;margin:0 auto;
+  display:grid;grid-template-columns:1fr auto;
+  align-items:end;gap:40px;
+}
+@media(max-width:640px){.hero{grid-template-columns:1fr;padding:48px 24px 40px}}
+
+.hero-left{}
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:11px;font-family:var(--mono);letter-spacing:.1em;
+  color:var(--ink3);margin-bottom:18px;
+}
+.hero-eyebrow::before{content:'';width:20px;height:1px;background:var(--ink3)}
+
+h1{
+  font-family:var(--display);
+  font-size:clamp(28px,4.5vw,48px);
+  font-weight:900;line-height:1.1;
+  letter-spacing:-.03em;margin-bottom:16px;
+}
+.hero-desc{
+  font-size:14px;color:var(--ink2);line-height:1.8;
+  font-weight:300;max-width:480px;
+}
+
+.hero-right{
+  text-align:right;
+  padding-bottom:4px;
+}
+.hero-stat{
+  font-family:var(--mono);
+  font-size:11px;color:var(--ink3);
+  letter-spacing:.06em;line-height:2;
+}
+.hero-stat strong{
+  font-size:28px;font-weight:500;
+  color:var(--ink);display:block;
+  letter-spacing:-.02em;line-height:1;
+  margin-bottom:2px;
+}
+
+/* ===== HOW TO USE ===== */
+.howto{
+  max-width:960px;margin:0 auto;
+  padding:0 40px 48px;
+  display:flex;gap:24px;
+}
+@media(max-width:640px){.howto{flex-direction:column;padding:0 24px 40px}}
+.howto-step{
+  flex:1;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:18px 20px;
+  display:flex;align-items:flex-start;gap:14px;
+}
+.howto-num{
+  font-family:var(--mono);font-size:11px;
+  color:var(--ink3);flex-shrink:0;padding-top:2px;
+  letter-spacing:.06em;
+}
+.howto-text{font-size:13px;color:var(--ink2);line-height:1.65}
+.howto-text strong{color:var(--ink);font-weight:500;display:block;margin-bottom:2px}
+
+/* ===== DIVIDER ===== */
+.divider{
+  max-width:960px;margin:0 auto;padding:0 40px 32px;
+  display:flex;align-items:center;gap:16px;
+}
+@media(max-width:640px){.divider{padding:0 24px 24px}}
+.divider-line{flex:1;height:1px;background:var(--border)}
+.divider-label{
+  font-size:11px;font-family:var(--mono);color:var(--ink3);
+  letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;
+}
+
+/* ===== CARDS GRID ===== */
+.cards{
+  max-width:960px;margin:0 auto;
+  padding:0 40px 80px;
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:16px;
+}
+@media(max-width:820px){.cards{grid-template-columns:repeat(2,1fr);padding:0 24px 60px}}
+@media(max-width:520px){.cards{grid-template-columns:1fr;padding:0 20px 60px}}
+
+.card{
+  background:var(--surface);
+  border:1.5px solid var(--border);
+  border-radius:14px;
+  overflow:hidden;
+  cursor:pointer;
+  text-decoration:none;
+  display:flex;flex-direction:column;
+  transition:all .22s cubic-bezier(.34,1.2,.64,1);
+}
+.card:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,0,0,.08)}
+.card:hover .card-arrow{transform:translateX(4px)}
+
+/* color themes */
+.card-A  .card-top{background:#f5f0e8;border-bottom:1px solid #e8e0d0}
+.card-A  .card-tag{background:#c84b2f;color:#fff}
+.card-A:hover{border-color:#c84b2f}
+
+.card-B1 .card-top{background:#edf1fb;border-bottom:1px solid #d8e0f5}
+.card-B1 .card-tag{background:#2f6fc8;color:#fff}
+.card-B1:hover{border-color:#2f6fc8}
+
+.card-B2 .card-top{background:#f0ecfc;border-bottom:1px solid #d4cef5}
+.card-B2 .card-tag{background:#5436c8;color:#fff}
+.card-B2:hover{border-color:#5436c8}
+
+.card-C  .card-top{background:#fdf0f8;border-bottom:1px solid #f0c8e4}
+.card-C  .card-tag{background:#a8207a;color:#fff}
+.card-C:hover{border-color:#a8207a}
+
+.card-D  .card-top{background:#fdf6e3;border-bottom:1px solid #f0d080}
+.card-D  .card-tag{background:#c8860a;color:#fff}
+.card-D:hover{border-color:#c8860a}
+
+.card-E  .card-top{background:#fdf3ee;border-bottom:1px solid #f0d0c0}
+.card-E  .card-tag{background:#c8601a;color:#fff}
+.card-E:hover{border-color:#c8601a}
+
+.card-F  .card-top{background:#edf3f9;border-bottom:1px solid #cdd8e3}
+.card-F  .card-tag{background:#1a5080;color:#fff}
+.card-F:hover{border-color:#1a5080}
+
+.card-G  .card-top{background:#eaf5ef;border-bottom:1px solid #c0ddc8}
+.card-G  .card-tag{background:linear-gradient(90deg,#1a7848,#1a5898);color:#fff}
+.card-G:hover{border-color:#1a7848}
+
+.card-H  .card-top{background:#eaf0fb;border-bottom:1px solid #c0d0e8}
+.card-H  .card-tag{background:linear-gradient(90deg,#1a4878,#0f6e56);color:#fff}
+.card-H:hover{border-color:#1a4878}
+
+
+.card-top{padding:18px 18px 14px}
+.card-top-row{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;gap:6px}
+.card-tag{font-size:10px;font-family:var(--mono);letter-spacing:.06em;padding:3px 8px;border-radius:3px;font-weight:400;white-space:nowrap;line-height:1.4}
+.card-type{font-size:10px;font-family:var(--mono);letter-spacing:.06em;color:var(--ink3);background:rgba(255,255,255,.65);padding:3px 8px;border-radius:3px;white-space:nowrap;flex-shrink:0}
+
+.card-product{font-family:var(--display);font-size:18px;font-weight:900;line-height:1.15;letter-spacing:-.02em;color:var(--ink)}
+.card-C .card-product{color:#5a0840}
+.card-D .card-product{color:#7a4a00}
+.card-E .card-product{color:#3a1a08}
+.card-G .card-product{color:#0e1a10}
+.card-H .card-product{color:#0e1820}
+.card-product-sub{font-size:10px;font-weight:400;color:var(--ink3);font-family:var(--mono);letter-spacing:.04em;margin-top:3px}
+.card-C .card-product-sub{color:#a870a0}
+.card-D .card-product-sub{color:#a07040}
+.card-E .card-product-sub{color:#a08070}
+.card-G .card-product-sub{color:#6a8870}
+.card-H .card-product-sub{color:#5a7888}
+
+.card-body{padding:14px 18px 16px;flex:1;display:flex;flex-direction:column;gap:10px}
+.card-purpose{font-size:12px;font-weight:500;color:var(--ink);line-height:1.55}
+.card-meta{display:flex;flex-direction:column;gap:5px}
+.card-meta-row{display:flex;align-items:flex-start;gap:7px;font-size:11px;color:var(--ink2);line-height:1.5}
+.card-meta-key{font-family:var(--mono);font-size:9px;letter-spacing:.06em;color:var(--ink3);flex-shrink:0;padding-top:1px;min-width:28px;text-transform:uppercase}
+.card-tags{display:flex;flex-wrap:wrap;gap:4px}
+.tag{font-size:10px;padding:2px 8px;border-radius:20px;background:var(--warm);border:1px solid var(--border);color:var(--ink2)}
+
+.card-footer{padding:12px 18px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;margin-top:auto}
+.card-cta{font-size:12px;font-weight:500;color:var(--ink)}
+.card-arrow{width:24px;height:24px;border-radius:50%;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;transition:transform .2s;flex-shrink:0;color:var(--ink3)}
+.card-A  .card-arrow{border-color:#e8ccc8;color:#c84b2f}
+.card-B1 .card-arrow{border-color:#c0d0f0;color:#2f6fc8}
+.card-B2 .card-arrow{border-color:#c8c0f0;color:#5436c8}
+.card-C  .card-arrow{border-color:#f0c8e4;color:#a8207a}
+.card-D  .card-arrow{border-color:#f0d080;color:#c8860a}
+.card-E  .card-arrow{border-color:#f0c8b0;color:#c8601a}
+.card-F  .card-arrow{border-color:#c0d0e0;color:#1a5080}
+.card-G  .card-arrow{border-color:#b8d8c0;color:#1a7848}
+.card-H  .card-arrow{border-color:#b8c8e0;color:#1a4878}
+
+/* ===== FOOTER ===== */
+.site-footer{
+  border-top:1px solid var(--border);
+  padding:24px 40px;
+  display:flex;align-items:center;justify-content:space-between;
+  font-size:11px;color:var(--ink3);font-family:var(--mono);
+}
+@media(max-width:640px){.site-footer{padding:20px 24px;flex-direction:column;gap:8px;text-align:center}}
+
+/* animations */
+.card{animation:fadeUp .4s ease both}
+.card:nth-child(1){animation-delay:.04s}
+.card:nth-child(2){animation-delay:.08s}
+.card:nth-child(3){animation-delay:.12s}
+.card:nth-child(4){animation-delay:.16s}
+.card:nth-child(5){animation-delay:.20s}
+.card:nth-child(6){animation-delay:.24s}
+.card:nth-child(7){animation-delay:.28s}
+.card:nth-child(8){animation-delay:.32s}
+.card:nth-child(9){animation-delay:.36s}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="site-header">
+  <div class="logo">
+    <div class="logo-mark">
+      <svg viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="2" y="2" width="6" height="6" rx="1.5" fill="white"/>
+        <rect x="10" y="2" width="6" height="6" rx="1.5" fill="white" opacity=".6"/>
+        <rect x="2" y="10" width="6" height="6" rx="1.5" fill="white" opacity=".6"/>
+        <rect x="10" y="10" width="6" height="6" rx="1.5" fill="white" opacity=".3"/>
+      </svg>
+    </div>
+    <div class="logo-name">
+      NDソフトウェア
+      <span>BOOTH TOOLS 2026</span>
+    </div>
+  </div>
+  <div class="header-note"></div>
+</header>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-left">
+    <div class="hero-eyebrow">業務改善シミュレーター</div>
+    <h1>貴施設の課題を、<br>数字で見える化する。</h1>
+    <p class="hero-desc">用途・対象に合わせて6種類のシミュレーターをご用意しています。下のカードから貴施設に合ったものをお選びください。</p>
+  </div>
+  <div class="hero-right">
+    <div class="hero-stat">
+      <strong>9</strong>
+      シミュレーター収録
+    </div>
+  </div>
+</div>
+
+<!-- HOW TO USE -->
+<div class="howto">
+  <div class="howto-step">
+    <div class="howto-num">01</div>
+    <div class="howto-text"><strong>カードを選ぶ</strong>対象・用途を確認して、貴施設に近いものを選択</div>
+  </div>
+  <div class="howto-step">
+    <div class="howto-num">02</div>
+    <div class="howto-text"><strong>数字を入力する</strong>スライダーを動かすだけ。約1分で入力完了</div>
+  </div>
+  <div class="howto-step">
+    <div class="howto-num">03</div>
+    <div class="howto-text"><strong>結果を受け取る</strong>メールアドレスを入力で詳細レポートをお送りします</div>
+  </div>
+</div>
+
+<!-- DIVIDER -->
+<div class="divider">
+  <div class="divider-line"></div>
+  <div class="divider-label">シミュレーターを選ぶ</div>
+  <div class="divider-line"></div>
+</div>
+
+<!-- CARDS -->
+<div class="cards">
+
+  <!-- TYPE A -->
+  <a class="card card-A" href="roi_simulator_typeA.html">
+    <div class="card-top">
+      <div class="card-top-row">
+        <div class="card-tag">まずはここから</div>
+        <div class="card-type">TYPE A</div>
+      </div>
+      <div class="card-product">業務負担<br>診断シミュレーター</div>
+      <div class="card-product-sub">介護・障害福祉　共通</div>
+    </div>
+    <div class="card-body">
+      <div class="card-purpose">特定の製品に関係なく、現場の業務コスト・時間ロスをまるごと可視化します</div>
+      <div class="card-meta">
+        <div class="card-meta-row">
+          <div class="card-meta-key">対象</div>
+          <div>介護・障害福祉を問わず、すべての福祉事業所</div>
+        </div>
+        <div class="card-meta-row">
+          <div class="card-meta-key">用途</div>
+          <div>記録・書類・請求の月間コストを一括で試算。どの業務から改善すべきかが分かる</div>
+        </div>
+        <div class="card-meta-row">
+          <div class="card-meta-key">時間</div>
+          <div>約1分（3ステップ）</div>
+        </div>
+      </div>
+      <div class="card-tags">
+        <span class="tag">プロダクト非依存</span>
+        <span class="tag">全サービス種別</span>
+        <span class="tag">入口として最適</span>
+      </div>
+    </div>
+    <div class="card-footer">
+      <div class="card-cta">診断を始める</div>
+      <div class="card-arrow">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+    </div>
+  </a>
+
+  <!-- TYPE B1 -->
+  <a class="card card-B1" href="roi_simulator_typeB1.html">
+    <div class="card-top">
+      <div class="card-top-row">
+        <div class="card-tag">介護記録・業務支援</div>
+        <div class="card-type">TYPE B1</div>
+      </div>
+      <div class="card-product">ほのぼのNEXT<br>ROIシミュレーター</div>
+      <div class="card-product-sub">介護事業所向け</div>
+    </div>
+    <div class="card-body">
+      <div class="card-purpose">ほのぼのNEXT導入による記録業務の削減時間・コストを職員規模に合わせて試算します</div>
+      <div class="card-meta">
+        <div class="card-meta-row">
+          <div class="card-meta-key">対象</div>
+          <div>特養・老健・居宅介護支援・通所介護など介護事業所</div>
+        </div>
+        <div class="card-meta-row">
+          <div class="card-meta-key">用途</div>
+          <div>記録入力・申し送り・計画書作成ごとの削減効果を職員数ベースで算出</div>
+        </div>
+        <div class="card-meta-row">
+          <div class="card-meta-key">時間</div>
+          <div>約2分（リアルタイム算出）</div>
+        </div>
+      </div>
+      <div class="card-tags">
+        <span class="tag">ほのぼのNEXT</span>
+        <span class="tag">介護保険対応</span>
+        <span class="tag">記録業務特化</span>
+      </div>
+    </div>
+    <div class="card-footer">
+      <div class="card-cta">試算を始める</div>
+      <div class="card-arrow">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+    </div>
+  </a>
+
+  <!-- TYPE B2 -->
+  <a class="card card-B2" href="roi_simulator_typeB2.html">
+    <div class="card-top">
+      <div class="card-top-row">
+        <div class="card-tag">障害福祉サービス</div>
+        <div class="card-type">TYPE B2</div>
+      </div>
+      <div class="card-product">ほのぼのmore<br>ROIシミュレーター</div>
+      <div class="card-product-sub">障害福祉事業所向け</div>
+    </div>
+    <div class="card-body">
+      <div class="card-purpose">ほのぼのmore導入による支援記録・国保連請求・上限管理の改善効果を試算します</div>
+      <div class="card-meta">
+        <div class="card-meta-row">
+          <div class="card-meta-key">対象</div>
+          <div>就労継続支援・生活介護・グループホーム・相談支援など障害福祉事業所</div>
+        </div>
+        <div class="card-meta-row">
+          <div class="card-meta-key">用途</div>
+          <div>支援記録・個別支援計画・受給者証管理・国保連請求の削減効果を算出</div>
+        </div>
+        <div class="card-meta-row">
+          <div class="card-meta-key">時間</div>
+          <div>約2分（リアルタイム算出）</div>
+        </div>
+      </div>
+      <div class="card-tags">
+        <span class="tag">ほのぼのmore</span>
+        <span class="tag">障害自立支援法対応</span>
+        <span class="tag">請求業務特化</span>
+      </div>
+    </div>
+    <div class="card-footer">
+      <div class="card-cta">試算を始める</div>
+      <div class="card-arrow">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+    </div>
+  </a>
+
+  <!-- TYPE C -->
+  <a class="card card-C" href="roi_simulator_typeC.html">
+    <div class="card-top">
+      <div class="card-top-row">
+        <div class="card-tag">既存ユーザー向け</div>
+        <div class="card-type">TYPE C</div>
+      </div>
+      <div class="card-product">ほのぼのVoice<br>訴求ページ</div>
+      <div class="card-product-sub">ほのぼのNEXTユーザー専用</div>
+    </div>
+    <div class="card-body">
+      <div class="card-purpose">すでにほのぼのNEXTをお使いの事業所様へ。AI音声記録の導入で現場がどう変わるかをご体感ください</div>
+      <div class="card-meta">
+        <div class="card-meta-row">
+          <div class="card-meta-key">対象</div>
+          <div>ほのぼのNEXT導入済みの介護事業所</div>
+        </div>
+        <div class="card-meta-row">
+          <div class="card-meta-key">用途</div>
+          <div>現場の記録課題チェック＋音声記録の体験デモ。追加導入だけで即日利用可能</div>
+        </div>
+        <div class="card-meta-row">
+          <div class="card-meta-key">時間</div>
+          <div>約1分（チェックリスト形式）</div>
+        </div>
+      </div>
+      <div class="card-tags">
+        <span class="tag" style="background:#fde8f5;border-color:#f0c8e4;color:#a8207a">ほのぼのVoice</span>
+        <span class="tag" style="background:#fde8f5;border-color:#f0c8e4;color:#a8207a">AI音声認識</span>
+        <span class="tag" style="background:#fde8f5;border-color:#f0c8e4;color:#a8207a">NEXT連携専用</span>
+      </div>
+    </div>
+    <div class="card-footer">
+      <div class="card-cta">体験ページへ</div>
+      <div class="card-arrow">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+    </div>
+  </a>
+
+  <!-- TYPE D -->
+  <a class="card card-D" href="roi_simulator_careplan.html">
+    <div class="card-top">
+      <div class="card-top-row">
+        <div class="card-tag">今すぐ無料で始められる</div>
+        <div class="card-type">TYPE D</div>
+      </div>
+      <div class="card-product">ケアプランデータ連携<br>効果試算</div>
+      <div class="card-product-sub">居宅介護支援・サービス事業所向け</div>
+    </div>
+    <div class="card-body">
+      <div class="card-purpose">毎月のケアプラン・利用票のFAX・郵送・手入力をオンライン化。月間工数と年間コスト削減効果を試算します</div>
+      <div class="card-meta">
+        <div class="card-meta-row">
+          <div class="card-meta-key">対象</div>
+          <div>居宅介護支援事業所・介護サービス事業所（両方対応）</div>
+        </div>
+        <div class="card-meta-row">
+          <div class="card-meta-key">用途</div>
+          <div>FAX廃止・実績入力削減・確認作業自動化の削減効果を算出</div>
+        </div>
+        <div class="card-meta-row">
+          <div class="card-meta-key">時間</div>
+          <div>約2分（リアルタイム算出）</div>
+        </div>
+      </div>
+      <div class="card-tags">
+        <span class="tag">ケアプランデータ連携</span>
+        <span class="tag">FAX廃止効果</span>
+        <span class="tag" style="background:#fdf6e3;border-color:#f0d080;color:#7a4a00">1年間無料キャンペーン</span>
+      </div>
+    </div>
+    <div class="card-footer">
+      <div class="card-cta">試算を始める</div>
+      <div class="card-arrow">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+    </div>
+  </a>
+
+  <!-- TYPE E -->
+  <a class="card card-E" href="roi_simulator_tsunagaru.html">
+    <div class="card-top">
+      <div class="card-top-row">
+        <div class="card-tag">既存ユーザー向けオプション</div>
+        <div class="card-type">TYPE E</div>
+      </div>
+      <div class="card-product">つながる家族<br>経費削減試算</div>
+      <div class="card-product-sub">ほのぼのNEXT / more 導入済み向け</div>
+    </div>
+    <div class="card-body">
+      <div class="card-purpose">毎月の請求書郵送・封入作業・確認電話のコストを試算。切替率を変えながら削減効果をシミュレーションできます</div>
+      <div class="card-meta">
+        <div class="card-meta-row">
+          <div class="card-meta-key">対象</div>
+          <div>ほのぼのNEXT・more導入済みの介護・障害福祉事業所</div>
+        </div>
+        <div class="card-meta-row">
+          <div class="card-meta-key">用途</div>
+          <div>郵送コスト削減＋家族アプリ切替率ごとの効果比較</div>
+        </div>
+        <div class="card-meta-row">
+          <div class="card-meta-key">時間</div>
+          <div>約1分（リアルタイム算出）</div>
+        </div>
+      </div>
+      <div class="card-tags">
+        <span class="tag">つながる家族</span>
+        <span class="tag">郵送コスト削減</span>
+        <span class="tag">切替率シミュレーション</span>
+      </div>
+    </div>
+    <div class="card-footer">
+      <div class="card-cta">試算を始める</div>
+      <div class="card-arrow">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+    </div>
+  </a>
+
+  <!-- TYPE F -->
+  <a class="card card-F" href="roi_simulator_bpo.html">
+    <div class="card-top">
+      <div class="card-top-row">
+        <div class="card-tag">3ヶ月無料お試し中</div>
+        <div class="card-type">TYPE F</div>
+      </div>
+      <div class="card-product">請求事務支援<br>コスト比較試算</div>
+      <div class="card-product-sub">ほのぼのNEXT / more 導入済み向け</div>
+    </div>
+    <div class="card-body">
+      <div class="card-purpose">請求担当者を自社で抱えるコストとBPO委託費を比較。人件費・社保・採用コストまで含めて試算します</div>
+      <div class="card-meta">
+        <div class="card-meta-row">
+          <div class="card-meta-key">対象</div>
+          <div>ほのぼのNEXT・more導入済みで請求業務の外部委託を検討中の事業所</div>
+        </div>
+        <div class="card-meta-row">
+          <div class="card-meta-key">用途</div>
+          <div>自社対応コスト vs 委託コストの比較＋返戻・人材リスクの可視化</div>
+        </div>
+        <div class="card-meta-row">
+          <div class="card-meta-key">時間</div>
+          <div>約2分（リアルタイム算出）</div>
+        </div>
+      </div>
+      <div class="card-tags">
+        <span class="tag">請求事務BPO</span>
+        <span class="tag">コスト比較</span>
+        <span class="tag" style="background:#fdf6e3;border-color:#f0d080;color:#7a4a00">3ヶ月無料お試し</span>
+      </div>
+    </div>
+    <div class="card-footer">
+      <div class="card-cta">試算を始める</div>
+      <div class="card-arrow">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+    </div>
+  </a>
+
+  <!-- TYPE G -->
+  <a class="card card-G" href="roi_simulator_carepalette.html">
+    <div class="card-top">
+      <div class="card-top-row">
+        <div class="card-tag">施設・訪問　2製品対応</div>
+        <div class="card-type">TYPE G</div>
+      </div>
+      <div class="card-product">Care Palette<br>記録電子化試算</div>
+      <div class="card-product-sub">施設・通所・訪問系　切替対応</div>
+    </div>
+    <div class="card-body">
+      <div class="card-purpose">紙・手書き記録からタブレット電子化による削減効果を試算。Care Palette（施設・通所）とCare Palette Home/Nurse（訪問）を1画面で切替可能</div>
+      <div class="card-meta">
+        <div class="card-meta-row">
+          <div class="card-meta-key">対象</div>
+          <div>ほのぼのNEXT導入済みの施設・通所・訪問系介護事業所</div>
+        </div>
+        <div class="card-meta-row">
+          <div class="card-meta-key">用途</div>
+          <div>記録入力・紙管理・帰社往復・電話連絡の削減効果を算出</div>
+        </div>
+        <div class="card-meta-row">
+          <div class="card-meta-key">時間</div>
+          <div>約2分（製品タブ切替対応）</div>
+        </div>
+      </div>
+      <div class="card-tags">
+        <span class="tag" style="background:#eaf5ef;border-color:#ccddd0;color:#1a7848">Care Palette</span>
+        <span class="tag" style="background:#eaf0fb;border-color:#ccddd0;color:#1a5898">Care Palette Home/Nurse</span>
+        <span class="tag">記録電子化</span>
+      </div>
+    </div>
+    <div class="card-footer">
+      <div class="card-cta">試算を始める</div>
+      <div class="card-arrow">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+    </div>
+  </a>
+
+  <!-- TYPE H -->
+  <a class="card card-H" href="roi_simulator_iot.html">
+    <div class="card-top">
+      <div class="card-top-row">
+        <div class="card-tag">NEXT・more　両対応</div>
+        <div class="card-type">TYPE H</div>
+      </div>
+      <div class="card-product">IoTセンサー<br>導入診断・効果試算</div>
+      <div class="card-product-sub">介護・障害福祉　センサー選定支援</div>
+    </div>
+    <div class="card-body">
+      <div class="card-purpose">課題をチェックするだけで「どのセンサーを入れるべきか」を診断。見守り・バイタル・排泄・ナースコールの導入効果を試算します</div>
+      <div class="card-meta">
+        <div class="card-meta-row">
+          <div class="card-meta-key">対象</div>
+          <div>ほのぼのNEXT・more導入済みでIoTセンサー連携を検討中の施設</div>
+        </div>
+        <div class="card-meta-row">
+          <div class="card-meta-key">用途</div>
+          <div>課題→推奨センサー診断→夜間巡視削減・記録自動化・排泄介助削減の効果算出</div>
+        </div>
+        <div class="card-meta-row">
+          <div class="card-meta-key">時間</div>
+          <div>約2分（3ステップ診断）</div>
+        </div>
+      </div>
+      <div class="card-tags">
+        <span class="tag">IoTクラウド連携</span>
+        <span class="tag">センサー選定診断</span>
+        <span class="tag">夜間巡視削減</span>
+        <span class="tag">30社以上の連携機器対応</span>
+      </div>
+    </div>
+    <div class="card-footer">
+      <div class="card-cta">診断を始める</div>
+      <div class="card-arrow">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+    </div>
+  </a>
+
+</div>
+
+<!-- FOOTER -->
+<footer class="site-footer">
+  <div>NDソフトウェア株式会社　展示会ブース専用ツール</div>
+  <div>© 2025 ND Software Co., Ltd.</div>
+</footer>
+
+</body>
+</html>

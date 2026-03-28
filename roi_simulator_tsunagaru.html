@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>つながる家族　経費削減シミュレーター</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=Zen+Kaku+Gothic+New:wght@700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#fdf8f4;
+  --surface:#ffffff;
+  --surface2:#f5ede4;
+  --border:#e8ddd2;
+  --accent:#c8601a;
+  --accent2:#e8841a;
+  --accent-light:#fef3ea;
+  --green:#2a7a50;
+  --green-bg:#eaf5f0;
+  --text:#1e1410;
+  --text2:#5a4030;
+  --text3:#a08070;
+  --mono:'DM Mono',monospace;
+  --sans:'Noto Sans JP',sans-serif;
+  --display:'Zen Kaku Gothic New',sans-serif;
+  --r:10px;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh}
+body::before{content:'';position:fixed;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+
+.wrapper{max-width:900px;margin:0 auto;padding:52px 24px 80px}
+
+/* header */
+.header{margin-bottom:40px;animation:fadeUp .45s ease both}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-family:var(--mono);letter-spacing:.12em;color:var(--accent);text-transform:uppercase;margin-bottom:14px}
+.eyebrow::before{content:'';width:20px;height:1px;background:var(--accent)}
+h1{font-family:var(--display);font-size:clamp(22px,3.8vw,36px);font-weight:900;letter-spacing:-.02em;line-height:1.2;margin-bottom:10px}
+h1 em{font-style:normal;color:var(--accent)}
+.header-desc{font-size:13px;color:var(--text2);line-height:1.8;font-weight:300;max-width:580px}
+
+/* prereq badge */
+.prereq{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:6px;padding:8px 14px;margin-bottom:28px;
+  font-size:12px;color:var(--text2);
+  animation:fadeUp .45s .06s ease both;
+}
+.prereq strong{color:var(--accent);font-weight:500}
+
+.back-link{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--text3);font-family:var(--mono);letter-spacing:.04em;margin-bottom:28px;cursor:pointer;transition:color .2s;display:block}
+.back-link:hover{color:var(--accent)}
+
+/* layout */
+.layout{display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start}
+@media(max-width:700px){.layout{grid-template-columns:1fr}}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:28px;margin-bottom:16px}
+.card-label{font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--text3);text-transform:uppercase;margin-bottom:18px}
+
+/* service type */
+.sel-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+@media(max-width:480px){.sel-grid{grid-template-columns:1fr}}
+.sel-btn{border:1.5px solid var(--border);border-radius:8px;padding:12px 10px;cursor:pointer;background:var(--surface);text-align:center;transition:all .2s;font-family:var(--sans)}
+.sel-btn:hover{border-color:var(--accent2)}
+.sel-btn.selected{border-color:var(--accent);background:var(--accent-light)}
+.sel-btn-title{font-size:12px;font-weight:500;color:var(--text);margin-bottom:2px;line-height:1.3}
+.sel-btn-sub{font-size:10px;color:var(--text3)}
+
+/* slider */
+.slider-field{margin-bottom:22px}
+.slider-field:last-child{margin-bottom:0}
+.slider-label{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;gap:8px}
+.slider-label-text{font-size:13px;color:var(--text2);line-height:1.4}
+.slider-val{font-family:var(--mono);font-size:15px;font-weight:500;color:var(--text);flex-shrink:0}
+.slider-wrap{position:relative;height:20px;display:flex;align-items:center}
+input[type=range]{-webkit-appearance:none;width:100%;height:4px;background:var(--border);border-radius:2px;outline:none;cursor:pointer;position:relative;z-index:1}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;background:var(--surface);border:2px solid var(--accent);border-radius:50%;cursor:pointer;transition:transform .15s}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2)}
+.slider-fill{position:absolute;left:0;top:50%;height:4px;background:var(--accent);border-radius:2px;pointer-events:none;transform:translateY(-50%);z-index:0}
+
+/* checklist for extra costs */
+.extra-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:480px){.extra-grid{grid-template-columns:1fr}}
+.extra-item{
+  display:flex;align-items:center;gap:10px;
+  border:1.5px solid var(--border);border-radius:8px;
+  padding:12px 14px;cursor:pointer;transition:all .2s;
+  user-select:none;
+}
+.extra-item:hover{border-color:var(--accent2)}
+.extra-item.checked{border-color:var(--accent);background:var(--accent-light)}
+.extra-check{width:18px;height:18px;flex-shrink:0;border:1.5px solid var(--border);border-radius:4px;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.extra-item.checked .extra-check{background:var(--accent);border-color:var(--accent)}
+.extra-text{font-size:12px;color:var(--text);line-height:1.4}
+
+/* info note */
+.note{background:var(--accent-light);border:1px solid rgba(200,96,26,.2);border-radius:8px;padding:12px 14px;font-size:12px;color:var(--text2);line-height:1.7;margin-top:16px}
+.note strong{color:var(--accent);font-weight:500}
+
+/* feature list */
+.feature-list{list-style:none;display:flex;flex-direction:column;gap:10px}
+.feature-item{display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--text2);line-height:1.6}
+.feature-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:6px}
+
+/* sticky result */
+.result-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;position:sticky;top:24px;animation:fadeUp .45s .1s ease both}
+.rp-header{background:var(--accent);color:#fff;padding:18px 22px}
+.rp-title{font-size:13px;font-weight:500;margin-bottom:2px}
+.rp-sub{font-size:11px;opacity:.7;font-family:var(--mono)}
+
+.r-metric{padding:16px 22px;border-bottom:1px solid var(--border)}
+.r-lbl{font-size:10px;font-family:var(--mono);color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px}
+.r-num{font-family:var(--mono);font-size:clamp(20px,2.8vw,28px);font-weight:500;color:var(--accent);transition:all .3s cubic-bezier(.34,1.56,.64,1)}
+.r-num.green{color:var(--green)}
+.r-unit{font-size:11px;color:var(--text3)}
+
+/* bar */
+.r-bar{padding:16px 22px;border-bottom:1px solid var(--border)}
+.r-bar-label{font-size:10px;font-family:var(--mono);color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px}
+
+.compare-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.compare-row:last-child{margin-bottom:0}
+.compare-label{font-size:11px;color:var(--text3);width:52px;flex-shrink:0;text-align:right}
+.compare-track{flex:1;height:20px;background:var(--surface2);border-radius:4px;overflow:hidden;position:relative}
+.compare-fill{height:100%;border-radius:4px;transition:width .5s cubic-bezier(.34,1.2,.64,1);display:flex;align-items:center;padding-left:8px}
+.compare-fill.before{background:rgba(200,96,26,.2)}
+.compare-fill.after{background:rgba(42,122,80,.25)}
+.compare-fill-label{font-family:var(--mono);font-size:10px;white-space:nowrap}
+.compare-fill.before .compare-fill-label{color:var(--accent)}
+.compare-fill.after .compare-fill-label{color:var(--green)}
+
+/* breakdown */
+.r-breakdown{background:var(--surface2)}
+.r-bd-header{padding:10px 22px;background:rgba(200,96,26,.08);font-size:10px;font-family:var(--mono);color:var(--accent);letter-spacing:.08em;text-transform:uppercase}
+.r-bd-item{padding:10px 22px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.r-bd-label{font-size:12px;color:var(--text2)}
+.r-bd-val{font-family:var(--mono);font-size:12px;font-weight:500}
+.r-bd-val.save{color:var(--green)}
+.r-bd-val.cost{color:var(--accent)}
+
+.r-comment{margin:16px 22px;padding:12px 14px;background:rgba(200,96,26,.07);border-left:3px solid var(--accent);border-radius:0 6px 6px 0;font-size:12px;color:var(--text2);line-height:1.75}
+.r-comment strong{color:var(--accent);font-weight:500}
+
+.r-cta{padding:18px 22px;border-top:1px solid var(--border);background:var(--surface2)}
+.r-cta-text{font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:12px}
+.r-cta-text strong{color:var(--text);font-weight:500}
+.inp{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:7px;font-family:var(--sans);font-size:13px;color:var(--text);padding:9px 12px;margin-bottom:8px;transition:border-color .2s}
+.inp:focus{outline:none;border-color:var(--accent)}
+.inp::placeholder{color:var(--text3)}
+.btn-send{width:100%;background:var(--accent);color:#fff;border:none;border-radius:7px;font-family:var(--sans);font-size:13px;font-weight:700;padding:11px;cursor:pointer;transition:opacity .2s}
+.btn-send:hover{opacity:.85}
+.success{display:none;align-items:center;gap:6px;background:var(--green-bg);border:1px solid rgba(42,122,80,.3);border-radius:7px;padding:10px 12px;font-size:12px;color:var(--green)}
+.success.show{display:flex}
+.cta-note{font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:8px}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <div class="header">
+    <div class="eyebrow">ほのぼのNEXT / more　連携オプション</div>
+    <h1>請求書郵送の<em>コストと手間</em>、<br>毎月いくらかかっていますか？</h1>
+    <p class="header-desc">「つながる家族」は請求書・お知らせをスマホで配信するWebサービスです。封入・郵送・再発行対応にかかっている実態コストを試算し、削減効果を可視化します。</p>
+  </div>
+
+  <div class="prereq">
+    利用には
+    <strong>ほのぼのNEXT</strong> または <strong>ほのぼのmore</strong> の導入が必要です
+  </div>
+
+  <span class="back-link" onclick="history.back()">← トップに戻る</span>
+
+  <div class="layout">
+    <!-- LEFT -->
+    <div>
+
+      <div class="card" style="animation:fadeUp .4s ease both">
+        <div class="card-label">主なサービス種別</div>
+        <div class="sel-grid">
+          <button class="sel-btn selected" onclick="selType(this,'tokuyou')">
+            <div class="sel-btn-title">特養・老健</div>
+            <div class="sel-btn-sub">入所系施設</div>
+          </button>
+          <button class="sel-btn" onclick="selType(this,'tsusho')">
+            <div class="sel-btn-title">通所・デイ</div>
+            <div class="sel-btn-sub">通所系施設</div>
+          </button>
+          <button class="sel-btn" onclick="selType(this,'houmon')">
+            <div class="sel-btn-title">居宅・訪問</div>
+            <div class="sel-btn-sub">在宅系サービス</div>
+          </button>
+          <button class="sel-btn" onclick="selType(this,'shogai')">
+            <div class="sel-btn-title">障害福祉</div>
+            <div class="sel-btn-sub">ほのぼのmore対象</div>
+          </button>
+          <button class="sel-btn" onclick="selType(this,'gh')">
+            <div class="sel-btn-title">GH・小規模</div>
+            <div class="sel-btn-sub">小規模施設</div>
+          </button>
+          <button class="sel-btn" onclick="selType(this,'other')">
+            <div class="sel-btn-title">複合・その他</div>
+            <div class="sel-btn-sub">複数サービス</div>
+          </button>
+        </div>
+      </div>
+
+      <div class="card" style="animation:fadeUp .4s .06s ease both">
+        <div class="card-label">事業所の規模</div>
+        <div class="slider-field">
+          <div class="slider-label">
+            <span class="slider-label-text">月間の請求書発行通数（利用者・家族への送付数）</span>
+            <span class="slider-val" id="v-bills">80通</span>
+          </div>
+          <div class="slider-wrap">
+            <div class="slider-fill" id="f-bills"></div>
+            <input type="range" id="s-bills" min="10" max="500" value="80" step="10" oninput="sv('bills',this.value,v=>v+'通');calc()">
+          </div>
+        </div>
+        <div class="slider-field">
+          <div class="slider-label">
+            <span class="slider-label-text">事業所数（複数拠点の場合）</span>
+            <span class="slider-val" id="v-offices">1事業所</span>
+          </div>
+          <div class="slider-wrap">
+            <div class="slider-fill" id="f-offices"></div>
+            <input type="range" id="s-offices" min="1" max="20" value="1" step="1" oninput="sv('offices',this.value,v=>v+'事業所');calc()">
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="animation:fadeUp .4s .08s ease both;border-color:var(--accent);background:var(--accent-light)">
+        <div class="card-label" style="color:var(--accent)">アプリ切替率の目標設定</div>
+        <div class="slider-field" style="margin-bottom:0">
+          <div class="slider-label">
+            <span class="slider-label-text" style="font-weight:500;color:var(--text)">ご家族のアプリ切替率（目標）</span>
+            <span class="slider-val" id="v-switch" style="color:var(--accent);font-size:20px">60%</span>
+          </div>
+          <div class="slider-wrap">
+            <div class="slider-fill" id="f-switch" style="background:var(--accent)"></div>
+            <input type="range" id="s-switch" min="10" max="100" value="60" step="5" oninput="sv('switch',this.value,v=>v+'%');calc()">
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:10px;font-family:var(--mono);color:var(--text3)">
+            <span>10%（試験導入）</span>
+            <span>50%（半数）</span>
+            <span>100%（完全移行）</span>
+          </div>
+        </div>
+        <div style="margin-top:14px;padding:10px 14px;background:rgba(200,96,26,.1);border-radius:6px;font-size:12px;color:var(--text2);line-height:1.7">
+          切替できなかった家族への<strong style="color:var(--text)">郵送コストは残ります</strong>。実態に近い切替率で試算することで、より現実的な削減効果が把握できます。
+        </div>
+      </div>
+
+      <div class="card" style="animation:fadeUp .4s .10s ease both">
+        <div class="card-label">現在の郵送・発行コスト</div>
+        <div class="slider-field">
+          <div class="slider-label">
+            <span class="slider-label-text">1通あたりの切手・封筒代</span>
+            <span class="slider-val" id="v-stamp">110円</span>
+          </div>
+          <div class="slider-wrap">
+            <div class="slider-fill" id="f-stamp"></div>
+            <input type="range" id="s-stamp" min="50" max="200" value="110" step="10" oninput="sv('stamp',this.value,v=>v+'円');calc()">
+          </div>
+        </div>
+        <div class="slider-field">
+          <div class="slider-label">
+            <span class="slider-label-text">1通の封入・宛名書き・ポスト投函にかかる時間</span>
+            <span class="slider-val" id="v-packtime">3分</span>
+          </div>
+          <div class="slider-wrap">
+            <div class="slider-fill" id="f-packtime"></div>
+            <input type="range" id="s-packtime" min="1" max="10" value="3" step="0.5" oninput="sv('packtime',this.value,v=>v+'分');calc()">
+          </div>
+        </div>
+        <div class="slider-field">
+          <div class="slider-label">
+            <span class="slider-label-text">担当者の時給</span>
+            <span class="slider-val" id="v-wage">1,500円</span>
+          </div>
+          <div class="slider-wrap">
+            <div class="slider-fill" id="f-wage"></div>
+            <input type="range" id="s-wage" min="1000" max="3000" value="1500" step="100" oninput="sv('wage',this.value,v=>Number(v).toLocaleString()+'円');calc()">
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="animation:fadeUp .4s .14s ease both">
+        <div class="card-label">追加コスト項目（該当するものを選択）</div>
+        <div class="extra-grid" id="extra-grid">
+          <div class="extra-item" onclick="toggleExtra(this,'reissue',30)">
+            <div class="extra-check"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="extra-text">請求書の紛失による再発行対応がある（月1〜2件）</div>
+          </div>
+          <div class="extra-item" onclick="toggleExtra(this,'notice',20)">
+            <div class="extra-check"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="extra-text">会報・お知らせも別途印刷・郵送している</div>
+          </div>
+          <div class="extra-item" onclick="toggleExtra(this,'confirm',25)">
+            <div class="extra-check"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="extra-text">届いたかどうか家族への確認電話が必要なことがある</div>
+          </div>
+          <div class="extra-item" onclick="toggleExtra(this,'storage',15)">
+            <div class="extra-check"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="extra-text">控えの印刷・ファイリング保管作業がある</div>
+          </div>
+        </div>
+        <div class="note">
+          <strong>つながる家族なら：</strong>配信状況（既読・未読）がシステム上で確認できるため、「届いたか」の確認電話も不要になります。
+        </div>
+      </div>
+
+      <div class="card" style="animation:fadeUp .4s .18s ease both">
+        <div class="card-label">つながる家族でできること</div>
+        <ul class="feature-list">
+          <li class="feature-item"><span class="feature-dot"></span>ほのぼのNEXT・moreの請求書データをそのままアプリ配信。封入・郵送作業がゼロに</li>
+          <li class="feature-item"><span class="feature-dot"></span>ご家族の閲覧状況（既読・未読）をシステムで確認。確認電話が不要に</li>
+          <li class="feature-item"><span class="feature-dot"></span>会報・面会のお知らせなどPDF・画像も配信可能。お知らせ郵送コストも削減</li>
+          <li class="feature-item"><span class="feature-dot"></span>配信日時の予約投稿機能。担当者が休みでも自動配信</li>
+          <li class="feature-item"><span class="feature-dot"></span>過去の請求書・領収書がアプリ上で履歴確認できるため、再発行依頼がなくなる</li>
+          <li class="feature-item"><span class="feature-dot"></span>障害福祉（ほのぼのmore）では受領通知書の配信にも対応</li>
+        </ul>
+      </div>
+
+    </div>
+
+    <!-- RIGHT: sticky result -->
+    <div class="result-panel">
+      <div class="rp-header">
+        <div class="rp-title">つながる家族　経費削減試算</div>
+        <div class="rp-sub" id="rp-type">入所系施設</div>
+      </div>
+
+      <div class="r-metric">
+        <div class="r-lbl">月間　郵送・発行コスト</div>
+        <div class="r-num" id="r-current-cost">--</div>
+        <div class="r-unit">円 / 月（現状・郵送100%）</div>
+      </div>
+      <div class="r-metric">
+        <div class="r-lbl">切替率<span id="rp-switch-pct" style="color:var(--accent);font-family:var(--mono);margin-left:4px">60%</span>での削減コスト</div>
+        <div class="r-num green" id="r-save-cost">--</div>
+        <div class="r-unit">万円 / 年</div>
+      </div>
+      <div class="r-metric">
+        <div class="r-lbl">月間削減作業時間（切替率適用後）</div>
+        <div class="r-num" id="r-save-time">--</div>
+        <div class="r-unit">時間 / 月</div>
+      </div>
+
+      <!-- 3-bar comparison -->
+      <div class="r-bar">
+        <div class="r-bar-label">月間コスト比較</div>
+        <div class="compare-row">
+          <div class="compare-label">現状</div>
+          <div class="compare-track">
+            <div class="compare-fill before" id="bar-before" style="width:100%">
+              <span class="compare-fill-label" id="bar-before-label">--円</span>
+            </div>
+          </div>
+        </div>
+        <div class="compare-row">
+          <div class="compare-label" id="bar-switch-label" style="font-size:10px;color:var(--accent)">切替後</div>
+          <div class="compare-track">
+            <div class="compare-fill" id="bar-switch" style="width:60%;background:rgba(200,96,26,.35)">
+              <span class="compare-fill-label" id="bar-switch-val" style="color:var(--accent)">--円</span>
+            </div>
+          </div>
+        </div>
+        <div class="compare-row">
+          <div class="compare-label" style="font-size:10px;color:var(--green)">100%移行</div>
+          <div class="compare-track">
+            <div class="compare-fill after" id="bar-after" style="width:15%">
+              <span class="compare-fill-label" id="bar-after-label">--円</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="r-breakdown">
+        <div class="r-bd-header">コスト内訳（切替率適用後）</div>
+        <div class="r-bd-item">
+          <span class="r-bd-label">切替済み家族分（削減）</span>
+          <span class="r-bd-val save" id="bd-digital">--通 → 削減</span>
+        </div>
+        <div class="r-bd-item">
+          <span class="r-bd-label">郵送継続の家族分（残存）</span>
+          <span class="r-bd-val cost" id="bd-postal">--通 → 郵送継続</span>
+        </div>
+        <div class="r-bd-item">
+          <span class="r-bd-label">残存郵送コスト（月間）</span>
+          <span class="r-bd-val cost" id="bd-remain-cost">--円/月</span>
+        </div>
+        <div class="r-bd-item" style="border-top:2px solid var(--border)">
+          <span class="r-bd-label" style="font-weight:500">月間削減コスト（切替率後）</span>
+          <span class="r-bd-val save" id="bd-save">--円/月</span>
+        </div>
+        <div class="r-bd-item" style="background:var(--green-bg)">
+          <span class="r-bd-label" style="color:var(--green);font-weight:500">100%移行時の最大削減</span>
+          <span class="r-bd-val save" id="bd-max">--円/月</span>
+        </div>
+      </div>
+
+      <div class="r-comment" id="r-comment">入力内容に応じて試算結果が表示されます。</div>
+
+      <div class="r-cta">
+        <p class="r-cta-text">この試算と<strong>導入事例・料金案内</strong>を無料でお送りします</p>
+        <input class="inp" type="email" id="inp-email" placeholder="メールアドレス">
+        <input class="inp" type="text"  id="inp-org"   placeholder="法人名・施設名（任意）">
+        <button class="btn-send" onclick="sendLead()">資料を受け取る</button>
+        <div class="success" id="success">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="#2a7a50" stroke-width="1.5"/><path d="M5 8l2 2 4-4" stroke="#2a7a50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          送信完了。担当者よりご連絡します。
+        </div>
+        <p class="cta-note">※ 個人情報はND Softwareが適切に管理します</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script>
+const TYPE_NAMES = {
+  tokuyou:'入所系施設（特養・老健）',
+  tsusho:'通所・デイサービス',
+  houmon:'居宅・訪問系',
+  shogai:'障害福祉事業所',
+  gh:'グループホーム・小規模',
+  other:'複合・その他',
+};
+
+// 追加コスト（チェック項目ごとの月額換算・円）
+let extraCosts = { reissue:0, notice:0, confirm:0, storage:0 };
+const EXTRA_VALS = { reissue:3000, notice:2000, confirm:2500, storage:1500 };
+
+function g(id){ return document.getElementById(id); }
+
+function sv(id, val, fmt){
+  g('v-'+id).textContent = fmt(val);
+  const el = g('s-'+id);
+  const pct = (val - el.min) / (el.max - el.min) * 100;
+  g('f-'+id).style.width = pct + '%';
+}
+
+function selType(btn, type){
+  document.querySelectorAll('.sel-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  g('rp-type').textContent = TYPE_NAMES[type] || 'その他';
+  calc();
+}
+
+function toggleExtra(el, key, _){
+  el.classList.toggle('checked');
+  extraCosts[key] = el.classList.contains('checked') ? EXTRA_VALS[key] : 0;
+  calc();
+}
+
+function calc(){
+  const bills      = +g('s-bills').value;
+  const offices    = +g('s-offices').value;
+  const switchRate = +g('s-switch').value / 100;  // 0.0〜1.0
+  const stamp      = +g('s-stamp').value;
+  const packtime   = +g('s-packtime').value;
+  const wage       = +g('s-wage').value;
+
+  const totalBills   = bills * offices;
+  const digitalBills = Math.round(totalBills * switchRate);    // アプリ切替分
+  const postalBills  = totalBills - digitalBills;              // 郵送残存分
+
+  // 現状コスト（全通郵送）
+  const stampCostFull  = totalBills * stamp;
+  const laborCostFull  = Math.round(totalBills * packtime / 60 * wage);
+  const extraTotal     = Object.values(extraCosts).reduce((a,b) => a+b, 0) * offices;
+  const totalMonthCost = stampCostFull + laborCostFull + extraTotal;
+
+  // 切替率適用後コスト
+  // 郵送継続分のコスト
+  const stampCostPostal  = postalBills * stamp;
+  const laborCostPostal  = Math.round(postalBills * packtime / 60 * wage);
+  // 切替済み分の追加コスト（確認電話等）は切替率で按分削減
+  const extraRemain      = Math.round(extraTotal * (1 - switchRate));
+  const switchMonthCost  = stampCostPostal + laborCostPostal + extraRemain;
+
+  // 100%移行時コスト（アプリ利用料等の最低コスト残12%）
+  const fullMigrateCost = Math.round(totalMonthCost * 0.12);
+
+  const saveMonthSwitch = totalMonthCost - switchMonthCost;
+  const saveYearSwitch  = Math.round(saveMonthSwitch * 12 / 10000 * 10) / 10;
+  const saveTimeMonth   = Math.round(digitalBills * packtime / 60 * 10) / 10;
+  const saveMaxMonth    = totalMonthCost - fullMigrateCost;
+
+  // sync switch pct label
+  g('rp-switch-pct').textContent = Math.round(switchRate * 100) + '%';
+  g('bar-switch-label').textContent = Math.round(switchRate * 100) + '%切替後';
+
+  // display metrics
+  g('r-current-cost').textContent = totalMonthCost.toLocaleString();
+  g('r-save-cost').textContent    = saveYearSwitch;
+  g('r-save-time').textContent    = saveTimeMonth;
+
+  // bars（現状=100%基準で幅を計算）
+  g('bar-before-label').textContent = totalMonthCost.toLocaleString() + '円';
+  const switchPct = totalMonthCost > 0 ? Math.max(Math.round(switchMonthCost / totalMonthCost * 100), 4) : 100;
+  const afterPct  = totalMonthCost > 0 ? Math.max(Math.round(fullMigrateCost  / totalMonthCost * 100), 4) : 12;
+  g('bar-switch').style.width       = switchPct + '%';
+  g('bar-switch-val').textContent   = switchMonthCost.toLocaleString() + '円';
+  g('bar-after').style.width        = afterPct + '%';
+  g('bar-after-label').textContent  = fullMigrateCost.toLocaleString() + '円';
+
+  // breakdown
+  g('bd-digital').textContent      = digitalBills + '通 → 削減';
+  g('bd-postal').textContent       = postalBills  + '通 → 郵送継続';
+  g('bd-remain-cost').textContent  = switchMonthCost.toLocaleString() + '円/月';
+  g('bd-save').textContent         = saveMonthSwitch.toLocaleString() + '円/月';
+  g('bd-max').textContent          = saveMaxMonth.toLocaleString() + '円/月';
+
+  // comment
+  let comment = '';
+  if(totalMonthCost === 0){
+    comment = '通数・コストを入力すると試算結果が表示されます。';
+  } else if(switchRate < 0.3){
+    comment = `切替率${Math.round(switchRate*100)}%では月<strong>${saveMonthSwitch.toLocaleString()}円</strong>の削減効果です。<strong>切替率を上げるほど効果が拡大</strong>します。まず説明会を開いて家族への理解促進から始めると、切替率50〜70%を狙えます。`;
+  } else if(switchRate >= 0.3 && switchRate < 0.7){
+    comment = `切替率${Math.round(switchRate*100)}%で年間<strong>${saveYearSwitch}万円</strong>の削減。残り${Math.round((1-switchRate)*100)}%（${postalBills}通）が郵送継続中です。100%移行できれば最大<strong>月${saveMaxMonth.toLocaleString()}円</strong>まで拡大できます。`;
+  } else {
+    comment = `切替率${Math.round(switchRate*100)}%、年間<strong>${saveYearSwitch}万円</strong>の大幅削減が実現します。残り${postalBills}通の方への切替促進で、さらに<strong>月${(saveMaxMonth - saveMonthSwitch).toLocaleString()}円</strong>の追加削減余地があります。`;
+  }
+  g('r-comment').innerHTML = comment;
+}
+
+function sendLead(){
+  const email = g('inp-email').value.trim();
+  if(!email || !email.includes('@')){
+    g('inp-email').style.borderColor = 'var(--accent)';
+    setTimeout(() => g('inp-email').style.borderColor = '', 1200);
+    return;
+  }
+  g('success').classList.add('show');
+  ['inp-email','inp-org'].forEach(id => g(id).disabled = true);
+  const btn = document.querySelector('.btn-send');
+  btn.disabled = true; btn.style.opacity = '.4';
+}
+
+// init tracks
+['bills','offices','switch','stamp','packtime','wage'].forEach(id => {
+  const el = g('s-'+id); if(!el) return;
+  const pct = (el.value - el.min) / (el.max - el.min) * 100;
+  const f = g('f-'+id); if(f) f.style.width = pct + '%';
+});
+calc();
+</script>
+</body>
+</html>
