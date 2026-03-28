@@ -641,7 +641,7 @@ calc();
 
 <script>
 // ============================================================
-// NDソフトウェア CareTEX ブース専用 送信設定
+// NDソフトウェア ブース専用 送信設定
 // ★ 下記3箇所をResend取得後に差し替えてください ★
 // ============================================================
 window.BOOTH_CONF = {
@@ -726,7 +726,7 @@ function sendWithResend(toEmail, orgName, simName, resultRows, pdfBase64) {
   var htmlBody = '<div style="font-family:sans-serif;max-width:600px;margin:0 auto">'
     + '<div style="background:#1a4878;color:#fff;padding:16px 20px;border-radius:6px 6px 0 0">'
     + '<div style="font-size:13px;font-weight:bold">NDソフトウェア株式会社</div>'
-    + '<div style="font-size:11px;opacity:.7">CareTEX ブース 試算結果レポート</div></div>'
+    + '<div style="font-size:11px;opacity:.7">ブース 試算結果レポート</div></div>'
     + '<div style="background:#f8f8f8;padding:20px;border:1px solid #e0e0e0;border-top:none;border-radius:0 0 6px 6px">'
     + orgHeader
     + '<p style="margin:0 0 16px">「<strong>' + simName + '</strong>」の試算結果をPDFでお送りします。</p>'
@@ -852,7 +852,7 @@ function downloadPDF() {
     '<button class="ps-close-btn" onclick="closePDF()">✕</button>'
     +'<div class="ps-wrap">'
     +'<div class="ps-header">'
-    +'<div><div class="ps-logo">NDソフトウェア株式会社</div><div class="ps-logo-sub">CareTEX ブース 試算結果レポート</div></div>'
+    +'<div><div class="ps-logo">NDソフトウェア株式会社</div><div class="ps-logo-sub">ブース 試算結果レポート</div></div>'
     +'<div class="ps-date">'+today+'</div>'
     +'</div>'
     +'<div class="ps-title-bar">'
