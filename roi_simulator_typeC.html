@@ -169,9 +169,104 @@ h1 em{font-style:normal;color:var(--accent)}
 .btn-send:hover{opacity:.85}
 .success{display:none;align-items:center;gap:6px;background:rgba(42,122,80,.1);border:1px solid rgba(42,122,80,.3);border-radius:7px;padding:10px 12px;font-size:12px;color:var(--green)}
 .success.show{display:flex}
+.btn-dl{background:var(--surface);color:var(--accent,#c84b2f);border:1.5px solid var(--accent,#c84b2f);border-radius:7px;font-family:var(--sans);font-size:13px;font-weight:600;padding:10px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:5px}
+.btn-dl:hover{background:rgba(200,75,47,.06)}
+.btn-row-cta{display:flex;gap:8px;margin-bottom:8px}
+.btn-row-cta .btn-send,.btn-row-cta .btn-cta{flex:1;margin:0}
+.btn-row-cta .btn-dl{flex:0 0 auto;white-space:nowrap}
 .cta-note{font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:8px}
 
 @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+</style>
+
+
+<style id="print-style">
+@media print {
+  body > *:not(#pdf-sheet) { display: none !important; }
+  #pdf-sheet { display: block !important; }
+  @page { size: A4 portrait; margin: 0; }
+}
+#pdf-sheet {
+  display: none;
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  z-index: 9999; background: #fff;
+  font-family: 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
+}
+#pdf-sheet.open { display: block; }
+.ps-wrap {
+  width: 210mm; min-height: 297mm; margin: 0 auto;
+  background: #fff; position: relative; padding: 0;
+  box-shadow: 0 0 20px rgba(0,0,0,.15);
+}
+.ps-header {
+  background: var(--ps-ac);
+  color: #fff; padding: 16px 24px 14px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.ps-logo { font-size: 13px; font-weight: 700; letter-spacing: .04em; }
+.ps-logo-sub { font-size: 10px; opacity: .75; margin-top: 2px; }
+.ps-date { font-size: 10px; opacity: .7; text-align: right; }
+.ps-title-bar {
+  background: #f8f8f8; border-bottom: 3px solid var(--ps-ac);
+  padding: 18px 24px 14px;
+}
+.ps-sim-name { font-size: 18px; font-weight: 900; color: #1a1a1a; letter-spacing: -.02em; }
+.ps-org { font-size: 12px; color: var(--ps-ac); font-weight: 600; margin-top: 4px; }
+.ps-section { padding: 16px 24px 0; }
+.ps-section-label {
+  font-size: 9px; letter-spacing: .14em; text-transform: uppercase;
+  color: #999; margin-bottom: 10px;
+  display: flex; align-items: center; gap: 8px;
+}
+.ps-section-label::after { content: ''; flex: 1; height: 1px; background: #e8e8e8; }
+.ps-metrics {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px;
+}
+.ps-metric {
+  border: 1px solid #e8e8e8; border-radius: 6px; padding: 12px 14px;
+  border-top: 3px solid var(--ps-ac);
+}
+.ps-metric-lbl { font-size: 9px; color: #888; margin-bottom: 6px; line-height: 1.4; }
+.ps-metric-val { font-size: 22px; font-weight: 900; color: var(--ps-ac); line-height: 1; }
+.ps-metric-unit { font-size: 10px; color: #aaa; margin-top: 3px; }
+.ps-bd-table { width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 11px; }
+.ps-bd-table th {
+  background: var(--ps-ac); color: #fff; padding: 7px 12px;
+  text-align: left; font-weight: 600; font-size: 10px;
+}
+.ps-bd-table td { padding: 7px 12px; border-bottom: 1px solid #f0f0f0; color: #333; }
+.ps-bd-table tr:nth-child(even) td { background: #fafafa; }
+.ps-bd-table td:last-child { text-align: right; font-weight: 600; color: var(--ps-ac); }
+.ps-input-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+.ps-input-table th {
+  background: #555; color: #fff; padding: 7px 12px;
+  text-align: left; font-weight: 500; font-size: 10px;
+}
+.ps-input-table td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; color: #444; }
+.ps-input-table tr:nth-child(even) td { background: #fafafa; }
+.ps-input-table td:last-child { text-align: right; color: #333; font-weight: 500; }
+.ps-comment {
+  margin: 0 24px 16px;
+  padding: 12px 16px;
+  background: #fff8f0;
+  border-left: 4px solid var(--ps-ac);
+  border-radius: 0 6px 6px 0;
+  font-size: 11px; color: #444; line-height: 1.8;
+}
+.ps-comment strong { color: var(--ps-ac); }
+.ps-footer {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: var(--ps-ac); color: #fff;
+  padding: 10px 24px; display: flex; align-items: center; justify-content: space-between;
+  font-size: 9px;
+}
+.ps-close-btn {
+  position: fixed; top: 12px; right: 12px;
+  background: rgba(0,0,0,.5); color: #fff; border: none;
+  border-radius: 50%; width: 36px; height: 36px; font-size: 18px;
+  cursor: pointer; z-index: 10000; display: flex; align-items: center; justify-content: center;
+}
+@media print { .ps-close-btn { display: none !important; } }
 </style>
 </head>
 <body>
@@ -374,12 +469,11 @@ h1 em{font-style:normal;color:var(--accent)}
         <p class="r-cta-text">診断結果と<strong>デモ・詳細資料</strong>を無料でお送りします</p>
         <input class="inp" type="email" id="inp-email" placeholder="メールアドレス">
         <input class="inp" type="text"  id="inp-org"   placeholder="法人名・施設名（任意）">
-        <button class="btn-send" onclick="sendLead()">デモ・資料を受け取る</button>
+        <div class="btn-row-cta"><button class="btn-send" onclick="sendLead()">結果をメールで受け取る（PDF添付）</button><button class="btn-dl" onclick="downloadPDF()" title="PDFをダウンロード"><svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M7 1v8M4 6l3 3 3-3M2 11h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>PDF保存</button></div>
         <div class="success" id="success">
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="#2a7a50" stroke-width="1.5"/><path d="M5 8l2 2 4-4" stroke="#2a7a50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          送信完了。担当者よりご連絡します。
-        </div>
-        <p class="cta-note">※ 個人情報はND Softwareが適切に管理します</p>
+          試算結果PDFをご入力のメールアドレスにお送りしました。</div>
+        <p class="cta-note">※ 試算結果PDFをご入力のアドレスにお送りします</p>
       </div>
     </div>
   </div>
@@ -429,18 +523,246 @@ const observer=new IntersectionObserver(entries=>{
 const tl=document.getElementById('timeline');
 if(tl) observer.observe(tl);
 
-function sendLead(){
-  const email=g('inp-email').value.trim();
-  if(!email||!email.includes('@')){
-    g('inp-email').style.borderColor='var(--accent)';
-    setTimeout(()=>g('inp-email').style.borderColor='',1200);
-    return;
+
+
+
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+<script>
+// ============================================================
+// NDソフトウェア CareTEX ブース専用 送信設定
+// ★ 下記3箇所をResend取得後に差し替えてください ★
+// ============================================================
+window.BOOTH_CONF = {
+  resendApiKey : 'YOUR_RESEND_API_KEY',
+  fromEmail    : 'booth@ndsoft.jp',
+  ccEmail      : 'YOUR_CC_EMAIL',
+  replyTo      : 'info@ndsoft.jp',
+};
+// ============================================================
+
+function buildPDF(simName, orgName, resultRows, inputRows, acRGB) {
+  var ac = acRGB || [47,111,200];
+  var jsPDF = window.jspdf.jsPDF;
+  var doc = new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  var today = new Date().toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'});
+
+  doc.setFillColor(ac[0],ac[1],ac[2]);
+  doc.rect(0,0,210,18,'F');
+  doc.setTextColor(255,255,255);
+  doc.setFont('helvetica','bold'); doc.setFontSize(11);
+  doc.text('ND Software Co., Ltd.', 12, 7);
+  doc.setFont('helvetica','normal'); doc.setFontSize(8);
+  doc.text('ROI Simulator Report', 12, 12.5);
+  doc.text(today, 198, 12.5, {align:'right'});
+
+  doc.setTextColor(30,30,30);
+  doc.setFont('helvetica','bold'); doc.setFontSize(13);
+  doc.text(simName, 12, 28);
+  if (orgName) {
+    doc.setFont('helvetica','normal'); doc.setFontSize(10);
+    doc.setTextColor(ac[0],ac[1],ac[2]);
+    doc.text(orgName, 12, 35);
   }
-  g('success').classList.add('show');
-  ['inp-email','inp-org'].forEach(id=>g(id).disabled=true);
-  const btn=document.querySelector('.btn-send');
-  btn.disabled=true;btn.style.opacity='.4';
+  doc.setDrawColor(200,200,200);
+  doc.line(12, orgName ? 39 : 32, 198, orgName ? 39 : 32);
+
+  var y = orgName ? 45 : 38;
+  var boxW = 87, boxH = 22, gap = 6;
+  resultRows.forEach(function(r, i) {
+    var col = i % 2, row = Math.floor(i / 2);
+    var bx = 12 + col*(boxW+gap), by = y + row*(boxH+gap);
+    doc.setFillColor(245,248,255);
+    doc.setDrawColor(ac[0],ac[1],ac[2]);
+    doc.roundedRect(bx,by,boxW,boxH,2,2,'FD');
+    doc.setTextColor(ac[0],ac[1],ac[2]);
+    doc.setFont('helvetica','bold'); doc.setFontSize(13);
+    doc.text(String(r.value), bx+boxW/2, by+13, {align:'center'});
+    doc.setFont('helvetica','normal'); doc.setFontSize(7);
+    doc.setTextColor(100,100,100);
+    doc.text(r.label, bx+boxW/2, by+19, {align:'center'});
+  });
+
+  y += Math.ceil(resultRows.length/2)*(boxH+gap)+6;
+  if (inputRows.length > 0) {
+    doc.setTextColor(30,30,30);
+    doc.setFont('helvetica','bold'); doc.setFontSize(9);
+    doc.text('Input Values', 12, y); y += 4;
+    doc.autoTable({
+      startY: y, head:[['Item','Value']], body: inputRows,
+      margin:{left:12,right:12}, styles:{fontSize:9,cellPadding:3},
+      headStyles:{fillColor:[ac[0],ac[1],ac[2]],textColor:255,fontStyle:'bold'},
+      alternateRowStyles:{fillColor:[245,248,255]},
+      columnStyles:{0:{cellWidth:120},1:{cellWidth:58,halign:'right'}},
+    });
+  }
+  doc.setFillColor(ac[0],ac[1],ac[2]);
+  doc.rect(0,282,210,15,'F');
+  doc.setTextColor(255,255,255);
+  doc.setFont('helvetica','normal'); doc.setFontSize(8);
+  doc.text('NDソフトウェア株式会社 / ND Software Co., Ltd.', 12, 289);
+  doc.text('Simulation only. Not a guarantee of results.', 198, 289, {align:'right'});
+  return doc.output('datauristring').split(',')[1];
+}
+
+function sendWithResend(toEmail, orgName, simName, resultRows, pdfBase64) {
+  var conf = window.BOOTH_CONF;
+  var resultText = resultRows.map(function(r){ return r.label + '：' + r.value; }).join('\n');
+  var today = new Date().toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'});
+  var orgHeader = orgName
+    ? '<p style="color:#1a4878;font-weight:bold;margin:0 0 12px">' + orgName + ' ご担当者様</p>'
+    : '<p style="margin:0 0 12px">ご担当者様</p>';
+  var htmlBody = '<div style="font-family:sans-serif;max-width:600px;margin:0 auto">'
+    + '<div style="background:#1a4878;color:#fff;padding:16px 20px;border-radius:6px 6px 0 0">'
+    + '<div style="font-size:13px;font-weight:bold">NDソフトウェア株式会社</div>'
+    + '<div style="font-size:11px;opacity:.7">CareTEX ブース 試算結果レポート</div></div>'
+    + '<div style="background:#f8f8f8;padding:20px;border:1px solid #e0e0e0;border-top:none;border-radius:0 0 6px 6px">'
+    + orgHeader
+    + '<p style="margin:0 0 16px">「<strong>' + simName + '</strong>」の試算結果をPDFでお送りします。</p>'
+    + '<div style="background:#fff;border:1px solid #dde;border-radius:4px;padding:14px 16px;margin-bottom:16px">'
+    + '<div style="font-size:11px;color:#888;margin-bottom:8px">■ 主な試算結果</div>'
+    + '<pre style="margin:0;font-size:13px;line-height:1.7;white-space:pre-wrap">' + resultText + '</pre></div>'
+    + '<p style="margin:0;font-size:12px;color:#666">詳細は添付PDFをご確認ください。</p>'
+    + '<hr style="margin:16px 0;border:none;border-top:1px solid #e0e0e0">'
+    + '<p style="margin:0;font-size:11px;color:#888">NDソフトウェア株式会社 / ' + today + '</p>'
+    + '</div></div>';
+  var ccList = (conf.ccEmail && conf.ccEmail !== 'YOUR_CC_EMAIL') ? [conf.ccEmail] : [];
+  var filename = simName.replace(/[^\w]/g,'_').replace(/_+/g,'_') + '_' + new Date().toISOString().slice(0,10) + '.pdf';
+  return fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json','Authorization':'Bearer ' + conf.resendApiKey},
+    body: JSON.stringify({
+      from: conf.fromEmail, to: [toEmail], cc: ccList, reply_to: conf.replyTo,
+      subject: '【NDソフトウェア】' + simName + ' 試算結果',
+      html: htmlBody,
+      attachments: [{filename: filename, content: pdfBase64}],
+    }),
+  }).then(function(r) {
+    if (!r.ok) return r.json().then(function(e){ throw new Error(e.message || String(r.status)); });
+    return r.json();
+  });
 }
 </script>
+
+<script>
+function sendLead() {
+  var emailEl = document.getElementById('inp-email');
+  var email   = emailEl ? emailEl.value.trim() : '';
+  if (!email || email.indexOf('@') < 0) {
+    if (emailEl) { emailEl.style.borderColor = 'var(--accent,#c84b2f)'; setTimeout(function(){ emailEl.style.borderColor = ''; }, 1200); }
+    return;
+  }
+  var orgEl   = document.getElementById('inp-org');
+  var orgName = orgEl ? orgEl.value.trim() : '';
+  var simName = 'ほのぼのVoice 現場診断（TYPE C）';
+  var acRGB   = [168,32,122];
+  var checked = document.querySelectorAll('.check-item.checked').length;
+  var resultRows = [
+    {label:'課題スコア', value: String(checked) + ' / 7項目'},
+    {label:'診断レベル', value: checked<=2?'軽微':checked<=4?'要注意':'要対応'},
+  ];
+  var inputRows = [];
+  var btnEl = document.querySelector('.btn-send');
+  if (btnEl) { btnEl.disabled = true; btnEl.style.opacity = '.5'; btnEl.textContent = '送信中...'; }
+  var pdfBase64 = buildPDF(simName, orgName, resultRows, inputRows, acRGB);
+  sendWithResend(email, orgName, simName, resultRows, pdfBase64)
+    .then(function() {
+      var s = document.getElementById('success');
+      if (s) s.classList.add('show');
+      if (btnEl) btnEl.textContent = '送信しました ✓';
+      if (emailEl) emailEl.disabled = true;
+      if (orgEl)   orgEl.disabled   = true;
+    })
+    .catch(function(err) {
+      console.error('Resend error:', err);
+      if (btnEl) { btnEl.disabled = false; btnEl.style.opacity = '1'; btnEl.textContent = '再試行する'; }
+      alert('送信に失敗しました。\nAPIキーと送信元アドレスをご確認ください。\n(' + err.message + ')');
+    });
+}
+
+
+function downloadPDF() {
+  var ac='#a8207a';
+  var simName='ほのぼのVoice 現場診断';
+  var orgEl=document.getElementById('inp-org')||document.getElementById('inp-name');
+  var orgName=orgEl?orgEl.value.trim():'';
+  var today=new Date().toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'});
+  var rows=[];
+  rows.push({lbl:'課題スコア',id:'score-big',unit:''});
+  var bds=[];
+
+  var inputs=[];
+  document.querySelectorAll('input[type=range]').forEach(function(el){
+    var sf=el.closest('.slider-field');
+    var lblEl=sf&&sf.querySelector('.slider-label-text');
+    var valEl=document.getElementById('v-'+el.id.replace('s-',''));
+    if(lblEl&&valEl)inputs.push({lbl:lblEl.textContent.trim(),val:valEl.textContent.trim()});
+  });
+  var cmEl=document.getElementById('r-comment')||document.getElementById('result-comment');
+  var cmText=cmEl?cmEl.innerText.trim():'';
+  var selBtn=document.querySelector('.sel-btn.selected');
+  var facName=selBtn&&selBtn.querySelector('.sel-btn-title')?selBtn.querySelector('.sel-btn-title').textContent.trim():'';
+
+  var mHtml=rows.map(function(r){
+    var el=document.getElementById(r.id);
+    var v=el?el.textContent.trim():'--';
+    return '<div class="ps-metric"><div class="ps-metric-lbl">'+r.lbl+'</div><div class="ps-metric-val">'+v+'</div><div class="ps-metric-unit">'+r.unit+'</div></div>';
+  }).join('');
+
+  var bdHtml='';
+  if(bds.length>0){
+    var bdR=bds.map(function(b){var el=document.getElementById(b.id);var v=el?el.textContent.trim():'--';return '<tr><td>'+b.lbl+'</td><td>'+v+'</td></tr>';}).join('');
+    bdHtml='<div class="ps-section"><div class="ps-section-label">削減内訳</div>'
+      +'<table class="ps-bd-table"><thead><tr><th>項目</th><th style="text-align:right">削減効果</th></tr></thead><tbody>'+bdR+'</tbody></table></div>';
+  }
+
+  var iHtml='';
+  if(inputs.length>0){
+    var iR=inputs.map(function(i){return '<tr><td>'+i.lbl+'</td><td>'+i.val+'</td></tr>';}).join('');
+    iHtml='<div class="ps-section"><div class="ps-section-label">入力値</div>'
+      +'<table class="ps-input-table"><thead><tr><th>項目</th><th style="text-align:right">入力値</th></tr></thead><tbody>'+iR+'</tbody></table></div>';
+  }
+
+  var cmHtml=cmText?'<div class="ps-comment">'+cmText.replace(/\n/g,'<br>')+'</div>':'';
+  var facHtml=facName?'<div style="padding:4px 24px 0;font-size:11px;color:#666">対象施設: '+facName+'</div>':'';
+
+  var sheet=document.getElementById('pdf-sheet');
+  sheet.style.setProperty('--ps-ac',ac);
+  sheet.innerHTML=
+    '<button class="ps-close-btn" onclick="closePDF()">✕</button>'
+    +'<div class="ps-wrap">'
+    +'<div class="ps-header">'
+    +'<div><div class="ps-logo">NDソフトウェア株式会社</div><div class="ps-logo-sub">CareTEX ブース 試算結果レポート</div></div>'
+    +'<div class="ps-date">'+today+'</div>'
+    +'</div>'
+    +'<div class="ps-title-bar">'
+    +'<div class="ps-sim-name">'+simName+'</div>'
+    +(orgName?'<div class="ps-org">'+orgName+' 御中</div>':'')
+    +'</div>'
+    +facHtml
+    +'<div class="ps-section" style="padding-top:16px">'
+    +'<div class="ps-section-label">試算結果</div>'
+    +'<div class="ps-metrics">'+mHtml+'</div>'
+    +'</div>'
+    +bdHtml
+    +cmHtml
+    +iHtml
+    +'<div class="ps-footer">'
+    +'<span>NDソフトウェア株式会社 / ND Software Co., Ltd.</span>'
+    +'<span>本資料は試算結果であり、効果を保証するものではありません</span>'
+    +'</div></div>';
+  sheet.classList.add('open');
+  setTimeout(function(){window.print();},300);
+}
+
+function closePDF(){
+  var s=document.getElementById('pdf-sheet');
+  s.classList.remove('open');
+  s.innerHTML='';
+}
+</script>
+<div id="pdf-sheet"></div>
 </body>
 </html>
