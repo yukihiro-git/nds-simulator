@@ -189,14 +189,18 @@ h1 em{font-style:normal;color:var(--accent)}
 #pdf-sheet {
   display: none;
   position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  z-index: 9999; background: #fff;
+  z-index: 9999; background: rgba(0,0,0,.55);
+  overflow-y: auto; overflow-x: hidden;
   font-family: 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
+  padding: 32px 16px 60px;
+  box-sizing: border-box;
 }
 #pdf-sheet.open { display: block; }
 .ps-wrap {
   width: 210mm; min-height: 297mm; margin: 0 auto;
-  background: #fff; position: relative; padding: 0;
-  box-shadow: 0 0 20px rgba(0,0,0,.15);
+  background: #fff; position: relative; padding: 0 0 60px;
+  box-shadow: 0 4px 40px rgba(0,0,0,.35);
+  border-radius: 4px;
 }
 .ps-header {
   background: var(--ps-ac);
@@ -700,6 +704,11 @@ function downloadPDF() {
     var valEl=document.getElementById('v-'+el.id.replace('s-',''));
     if(lblEl&&valEl)inputs.push({lbl:lblEl.textContent.trim(),val:valEl.textContent.trim()});
   });
+  // チェック済み課題一覧を収集
+  var checkedItems=[];
+  document.querySelectorAll('.check-item.checked .check-text').forEach(function(el){
+    checkedItems.push(el.textContent.trim());
+  });
   var cmEl=document.getElementById('r-comment')||document.getElementById('result-comment');
   var cmText=cmEl?cmEl.innerText.trim():'';
   var selBtn=document.querySelector('.sel-btn.selected');
@@ -747,6 +756,7 @@ function downloadPDF() {
     +'<div class="ps-metrics">'+mHtml+'</div>'
     +'</div>'
     +bdHtml
+    +(checkedItems.length>0?'<div class="ps-section"><div class="ps-section-label">チェックした現場課題</div><table class="ps-bd-table"><thead><tr><th>該当する課題</th></tr></thead><tbody>'+checkedItems.map(function(t){return '<tr><td>'+t+'</td></tr>';}).join('')+'</tbody></table></div>':'')
     +cmHtml
     +iHtml
     +'<div class="ps-footer">'
